@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="475" viewBox="0 0 1440 475" role="img" aria-labelledby="title desc">
+<title id="title">Project stages and status</title>
+<desc id="desc">Edge vision: ROI Packing on Raspberry Pi 5, implemented, 24 to 25 FPS at 416 input. Risk decision: per-vehicle CPA alerts, implemented. Demonstration: CARLA Town10HD junction, seven scenarios recorded, simulation only. Evaluation: MOT15 and SOMPT22, measured, self-computed and not a leaderboard entry.</desc>
+<rect x="1" y="1" width="1438" height="473" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+<path d="M1 68H1439 M1 169H1439 M1 270H1439 M1 371H1439 M362 1V474 M1013 1V474" stroke="#d0d7de" stroke-width="2" fill="none"/>
+<g font-family="Arial,Helvetica,sans-serif" fill="#24292f">
+ <text x="24" y="44" font-size="23" font-weight="700">Stage</text>
+ <text x="386" y="44" font-size="23" font-weight="700">Core question</text>
+ <text x="1037" y="44" font-size="23" font-weight="700">Status</text>
+ <text x="24" y="105" font-size="22" font-weight="700">01 · Edge vision</text>
+ <text x="24" y="141" font-size="20">ROI Packing on Raspberry Pi 5</text>
+ <text x="386" y="106" font-size="20">Can a CPU-only edge device keep small, distant</text>
+ <text x="386" y="139" font-size="20">pedestrians detectable at real-time speed?</text>
+ <text x="1037" y="107" font-size="21" font-weight="700">Implemented</text>
+ <text x="1037" y="141" font-size="20" fill="#57606a">24–25 FPS at 416 input</text>
+ <text x="24" y="207" font-size="22" font-weight="700">02 · Risk decision</text>
+ <text x="24" y="242" font-size="20">Per-vehicle CPA alerts</text>
+ <text x="386" y="207" font-size="20">Which vehicle is actually on a conflict course,</text>
+ <text x="386" y="240" font-size="20">and how early can its driver be told?</text>
+ <text x="1037" y="207" font-size="21" font-weight="700">Implemented</text>
+ <text x="1037" y="241" font-size="20" fill="#57606a">dCPA ≤ 2 m, tCPA ≤ 3 s</text>
+ <text x="24" y="309" font-size="22" font-weight="700">03 · Demonstration</text>
+ <text x="24" y="343" font-size="20">CARLA Town10HD junction</text>
+ <text x="386" y="308" font-size="20">Does the full chain work end to end, from</text>
+ <text x="386" y="341" font-size="20">camera frames to an alert on a phone?</text>
+ <text x="1037" y="308" font-size="21" font-weight="700">Seven scenarios recorded</text>
+ <text x="1037" y="342" font-size="20" fill="#57606a">Simulation only</text>
+ <text x="24" y="409" font-size="22" font-weight="700">04 · Evaluation</text>
+ <text x="24" y="443" font-size="20">MOT15 and SOMPT22</text>
+ <text x="386" y="409" font-size="20">Does per-person ROI improve detection and identity</text>
+ <text x="386" y="442" font-size="20">tracking, and what does packing cost?</text>
+ <text x="1037" y="409" font-size="21" font-weight="700">Measured on Pi 5</text>
+ <text x="1037" y="443" font-size="20" fill="#57606a">Self-computed, not a leaderboard</text>
+</g>
+</svg>

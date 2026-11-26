@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="470" viewBox="0 0 1440 470" role="img" aria-label="Project flow from edge vision on a Raspberry Pi 5 through per-vehicle risk decision and CARLA demonstration to public-dataset evaluation">
+<rect width="1440" height="470" rx="20" fill="#ffffff"/>
+<rect x="32" y="34" width="5" height="25" rx="2.5" fill="#0969da"/>
+<text x="53" y="54" fill="#57606a" font-size="18" font-family="Arial,Helvetica,sans-serif" font-weight="700" letter-spacing="2">PROJECT FLOW</text>
+<text x="34" y="110" fill="#24292f" font-size="38" font-family="Arial,Helvetica,sans-serif" font-weight="700">From Roadside Camera to Driver Alert</text>
+<text x="35" y="147" fill="#57606a" font-size="18" font-family="Arial,Helvetica,sans-serif">A roadside edge-AI warning system for blind-spot crosswalks</text>
+<g font-family="Arial,Helvetica,sans-serif">
+<g transform="translate(34 185)">
+ <rect width="326" height="250" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+ <rect x="1" y="242" width="324" height="7" rx="3" fill="#0969da"/>
+ <rect x="22" y="21" width="45" height="38" rx="9" fill="#ddf4ff"/><text x="44.5" y="46" text-anchor="middle" fill="#0969da" font-weight="700" font-size="17">01</text>
+ <text x="81" y="47" fill="#24292f" font-size="22" font-weight="700">Raspberry Pi 5</text>
+ <path d="M23 73H302" stroke="#d0d7de"/>
+ <text x="22" y="112" fill="#24292f" font-size="24" font-weight="700">Edge Vision</text>
+ <text x="22" y="152" fill="#57606a" font-size="17">Two fixed cameras: YOLO26n</text>
+ <text x="22" y="179" fill="#57606a" font-size="17">with ROI Packing, ByteTrack,</text>
+ <text x="22" y="206" fill="#57606a" font-size="17">and ground-plane homography</text>
+</g>
+<g transform="translate(382 185)">
+ <rect width="326" height="250" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+ <rect x="1" y="242" width="324" height="7" rx="3" fill="#2da44e"/>
+ <rect x="22" y="21" width="45" height="38" rx="9" fill="#dafbe1"/><text x="44.5" y="46" text-anchor="middle" fill="#1a7f37" font-weight="700" font-size="17">02</text>
+ <text x="81" y="47" fill="#24292f" font-size="22" font-weight="700">Server</text>
+ <path d="M23 73H302" stroke="#d0d7de"/>
+ <text x="22" y="112" fill="#24292f" font-size="24" font-weight="700">Risk Decision</text>
+ <text x="22" y="152" fill="#57606a" font-size="17">Per-vehicle CPA prediction,</text>
+ <text x="22" y="179" fill="#57606a" font-size="17">fused with early-departure</text>
+ <text x="22" y="206" fill="#57606a" font-size="17">cues and signal state</text>
+</g>
+<g transform="translate(730 185)">
+ <rect width="326" height="250" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+ <rect x="1" y="242" width="324" height="7" rx="3" fill="#8250df"/>
+ <rect x="22" y="21" width="45" height="38" rx="9" fill="#fbefff"/><text x="44.5" y="46" text-anchor="middle" fill="#8250df" font-weight="700" font-size="17">03</text>
+ <text x="81" y="47" fill="#24292f" font-size="22" font-weight="700">CARLA 0.9.16</text>
+ <path d="M23 73H302" stroke="#d0d7de"/>
+ <text x="22" y="112" fill="#24292f" font-size="24" font-weight="700">Demonstration</text>
+ <text x="22" y="152" fill="#57606a" font-size="17">Seven scripted scenarios at a</text>
+ <text x="22" y="179" fill="#57606a" font-size="17">blind-spot crosswalk, alerts</text>
+ <text x="22" y="206" fill="#57606a" font-size="17">delivered to a phone app</text>
+</g>
+<g transform="translate(1078 185)">
+ <rect width="326" height="250" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+ <rect x="1" y="242" width="324" height="7" rx="3" fill="#0969da"/>
+ <rect x="22" y="21" width="45" height="38" rx="9" fill="#ddf4ff"/><text x="44.5" y="46" text-anchor="middle" fill="#0969da" font-weight="700" font-size="17">04</text>
+ <text x="81" y="47" fill="#24292f" font-size="20" font-weight="700">MOT15 · SOMPT22</text>
+ <path d="M23 73H302" stroke="#d0d7de"/>
+ <text x="22" y="112" fill="#24292f" font-size="24" font-weight="700">Evaluation</text>
+ <text x="22" y="152" fill="#57606a" font-size="17">Four input modes compared</text>
+ <text x="22" y="179" fill="#57606a" font-size="17">on public tracking data,</text>
+ <text x="22" y="206" fill="#57606a" font-size="17">measured on the Pi 5</text>
+</g>
+</g></svg>
