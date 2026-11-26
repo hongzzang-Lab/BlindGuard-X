@@ -16,7 +16,7 @@
 
 ## Abstract
 
-Drivers cannot react to a pedestrian they cannot see. BlindGuard-X places the sensing at the roadside instead of in the car: a fixed camera watches the crosswalk and a second one watches the waiting zone, and a Raspberry Pi 5 turns both streams into pedestrian positions, velocities and an early-departure cue. A server combines these with each vehicle's position and speed, predicts the closest point of approach (CPA) per vehicle, and sends a staged alert—caution, warning, danger—over WebSocket to **only the vehicle on a conflict course**. Because the Pi has no GPU, the detector runs at a small 416×416 input, where distant pedestrians become too small to find. We therefore select regions from optical flow and track memory and pack them into a single 416×416 canvas for one inference (ROI Packing). On two public tracking datasets this raised Recall and IDF1 over full-frame input at about 25 FPS on the Pi 5, while running about 18–20 % slower than plain full-frame detection. The system has been exercised in CARLA and on public data, not on a public road.
+Drivers cannot react to a pedestrian they cannot see. BlindGuard-X watches the crosswalk from the roadside with two cameras and a Raspberry Pi 5, and alerts **only the vehicle on a conflict course**. ROI Packing keeps distant pedestrians detectable at a 416×416 input. Tested in CARLA and on public datasets—not on public roads.
 
 <p align="center"><img src="assets/poster/fig1-concept.png" width="640"/></p>
 
