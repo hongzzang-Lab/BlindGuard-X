@@ -63,30 +63,63 @@ Bold marks the best value in each column. Per-person ROI raised Recall and IDF1 
 
 ### Visualization results in CARLA
 
-Each clip shows the moment of decision (left, then right). Click a title for the full video.
+Each clip shows the moment of decision. Click a title for the full video.
 
-<p align="center"><img src="assets/demo/case1_blind_spot.gif" width="400"/>&nbsp;&nbsp;<img src="assets/demo/case1_no_app.gif" width="400"/></p>
-<p align="center">
-  <a href="assets/videos/case1_blind_spot.mp4"><b>CASE 1 · Blind spot</b></a> — caution → warning → danger; stops 2 m before the pedestrian<br>
-  <a href="assets/videos/case1_no_app.mp4"><b>CASE 1 control · No app</b></a> — same scene without the alert: collision
-</p>
+<table align="center">
+  <tr>
+    <td align="center" valign="top" width="50%">
+      <img src="assets/demo/case1_blind_spot.gif" width="400"/><br>
+      <a href="assets/videos/case1_blind_spot.mp4"><b>CASE 1 · Blind spot</b></a><br>
+      Caution → warning → danger;<br>stops 2 m before the pedestrian
+    </td>
+    <td align="center" valign="top" width="50%">
+      <img src="assets/demo/case1_no_app.gif" width="400"/><br>
+      <a href="assets/videos/case1_no_app.mp4"><b>CASE 1 control · No app</b></a><br>
+      Same scene without the alert:<br>collision
+    </td>
+  </tr>
+</table>
 
-<p align="center"><img src="assets/demo/case2_signal_change.gif" width="400"/>&nbsp;&nbsp;<img src="assets/demo/case3_red_light.gif" width="400"/></p>
-<p align="center">
-  <a href="assets/videos/case2_signal_change.mp4"><b>CASE 2 · Signal change</b></a> — pedestrian runs just after red; warning, gradual stop<br>
-  <a href="assets/videos/case3_red_light.mp4"><b>CASE 3 · Red-light runner</b></a> — only the vehicle running the light is alerted
-</p>
+<table align="center">
+  <tr>
+    <td align="center" valign="top" width="50%">
+      <img src="assets/demo/case2_signal_change.gif" width="400"/><br>
+      <a href="assets/videos/case2_signal_change.mp4"><b>CASE 2 · Signal change</b></a><br>
+      Pedestrian runs just after red;<br>warning, gradual stop
+    </td>
+    <td align="center" valign="top" width="50%">
+      <img src="assets/demo/case3_red_light.gif" width="400"/><br>
+      <a href="assets/videos/case3_red_light.mp4"><b>CASE 3 · Red-light runner</b></a><br>
+      Only the vehicle running the light<br>is alerted
+    </td>
+  </tr>
+</table>
 
-<p align="center"><img src="assets/demo/case4_speeding.gif" width="400"/>&nbsp;&nbsp;<img src="assets/demo/case5_selective.gif" width="400"/></p>
-<p align="center">
-  <a href="assets/videos/case4_speeding.mp4"><b>CASE 4 · Speeding</b></a> — 50 km/h approach; alerted earlier, stops in time<br>
-  <a href="assets/videos/case5_selective.mp4"><b>CASE 5 · Selective alert</b></a> — two vehicles in adjacent lanes; only the one still in conflict is alerted
-</p>
+<table align="center">
+  <tr>
+    <td align="center" valign="top" width="50%">
+      <img src="assets/demo/case4_speeding.gif" width="400"/><br>
+      <a href="assets/videos/case4_speeding.mp4"><b>CASE 4 · Speeding</b></a><br>
+      50 km/h approach;<br>alerted earlier, stops in time
+    </td>
+    <td align="center" valign="top" width="50%">
+      <img src="assets/demo/case5_selective.gif" width="400"/><br>
+      <a href="assets/videos/case5_selective.mp4"><b>CASE 5 · Selective alert</b></a><br>
+      Two vehicles in adjacent lanes;<br>only the one still in conflict is alerted
+    </td>
+  </tr>
+</table>
 
-<p align="center"><img src="assets/demo/case0_wait_only.gif" width="400"/></p>
-<p align="center">
-  <a href="assets/videos/case0_wait_only.mp4"><b>CASE 0 control · Loitering</b></a> — pedestrian only waits; no false alert
-</p>
+<table align="center">
+  <tr>
+    <td align="center" valign="top" width="50%">
+      <img src="assets/demo/case0_wait_only.gif" width="400"/><br>
+      <a href="assets/videos/case0_wait_only.mp4"><b>CASE 0 control · Loitering</b></a><br>
+      Pedestrian only waits;<br>no false alert
+    </td>
+    <td align="center" valign="top" width="50%"></td>
+  </tr>
+</table>
 
 In these recordings the camera frames are analysed on a real Raspberry Pi 5 and the alert is shown on a real phone. Vehicle position and speed, signals, and the scripted motion come from the simulator.
 
