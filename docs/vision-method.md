@@ -39,6 +39,10 @@ The pipeline exposes four input strategies so they can be compared under identic
 | `crops` | OURS (per-ROI inference) | Each ROI cropped separately, one inference per ROI |
 | `packed` | OURS_PACKED | All ROIs packed into one 416×416 canvas, one inference |
 
+<p align="center"><img src="../assets/poster/fig6-roi-comparison.jpg" alt="ROI and detections for FIXED, ADAPTIVE and OURS at frames 110, 140 and 160 of a CARLA clip (poster figure 6)" width="100%"/></p>
+
+> Poster figure 6: the same three frames of a CARLA clip under a fixed ROI (top), ADAPTIVE (middle) and per-person ROI (bottom). `FIXED` here is a hand-set region and is not the `FULL` baseline used in the public-dataset evaluation.
+
 ## What was and was not established
 
 - **Per-person ROI finds more people.** Recall and IDF1 rose over full-frame input on both evaluation datasets.

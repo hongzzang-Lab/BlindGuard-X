@@ -4,6 +4,10 @@
 
 <p align="center"><img src="../assets/project-stage-table.svg" alt="Project stages, core questions and status" width="100%"/></p>
 
+<p align="center"><img src="../assets/poster/fig2-architecture.png" alt="System architecture from the project poster (labels in Korean)" width="100%"/></p>
+
+<p align="center"><img src="../assets/project-flow.svg" alt="Project flow in four stages" width="100%"/></p>
+
 This page follows a single observation through the system. It describes what the implementation does, **not** a claim that the system has been validated on public roads.
 
 ```
@@ -36,6 +40,10 @@ Cam1 looks at the crosswalk. Each frame goes through motion and track-based regi
 
 **Question:** Is there a usable signal before the pedestrian leaves the kerb?
 
+<p align="center"><img src="../assets/poster/fig4-emr-concept.png" alt="Cam2 polygon zones: sidewalk, kerb boundary and road, with a motion vector toward the road (poster figure 4, labels in Korean)" width="70%"/></p>
+
+<p align="center"><img src="../assets/poster/fig5-cam2-motion.jpg" alt="Cam2 in CARLA: raw frame, MOG2 foreground and sparse LK vectors (poster figure 5)" width="100%"/></p>
+
 Cam2 watches the waiting zone. Foreground from MOG2 and sparse Lucas–Kanade flow are combined into an Early Motion Risk (EMR) score from three terms: proximity to the kerb line, motion toward the road, and persistence. The kerb boundary may be a polyline, so curved kerbs are supported.
 
 **Status:** The weights and threshold (0.4 / 0.4 / 0.2, threshold 0.6) were set by the team, not fitted to field data. The cue worked in simulation; **it did not trigger in our real-camera test**.
@@ -53,6 +61,8 @@ For each vehicle the server computes the closest point of approach (CPA) with th
 | Caution | Cam2 EMR ≥ 0.6 (sustained) and the vehicle will reach the crosswalk within 5 s in the lane nearest the waiting zone |
 | Warning | Cam1 CPA: dCPA ≤ 2 m and 0 ≤ tCPA ≤ 3 s — or a Caution during a signal transition (flashing, or within 3 s of red) |
 | Danger | CPA condition with tCPA ≤ 1.5 s |
+
+<p align="center"><img src="../assets/poster/app-driving.png" alt="Driver app in normal driving" width="180"/>&nbsp;&nbsp;&nbsp;<img src="../assets/poster/app-danger.png" alt="Driver app showing a danger alert" width="180"/></p>
 
 A level is held for one second to avoid flicker and is sent only when it changes. A vehicle that is not on a conflict course receives nothing, even when it is in the same scene.
 

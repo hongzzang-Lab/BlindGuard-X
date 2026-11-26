@@ -18,7 +18,9 @@
 
 Drivers cannot react to a pedestrian they cannot see. BlindGuard-X places the sensing at the roadside instead of in the car: a fixed camera watches the crosswalk and a second one watches the waiting zone, and a Raspberry Pi 5 turns both streams into pedestrian positions, velocities and an early-departure cue. A server combines these with each vehicle's position and speed, predicts the closest point of approach (CPA) per vehicle, and sends a staged alert—caution, warning, danger—over WebSocket to **only the vehicle on a conflict course**. Because the Pi has no GPU, the detector runs at a small 416×416 input, where distant pedestrians become too small to find. We therefore select regions from optical flow and track memory and pack them into a single 416×416 canvas for one inference (ROI Packing). On two public tracking datasets this raised Recall and IDF1 over full-frame input at about 25 FPS on the Pi 5, while running about 18–20 % slower than plain full-frame detection. The system has been exercised in CARLA and on public data, not on a public road.
 
-<p align="center"><img src="assets/project-flow.svg" width="900"/></p>
+<p align="center"><img src="assets/poster/fig1-concept.png" width="640"/></p>
+
+> Concept (poster figure 1; labels in Korean). ① A parked vehicle hides the pedestrian from the driver. ② A roadside camera keeps watching the crosswalk and the waiting zone. ③ When a risk is detected, only the approaching vehicle on that side is alerted.
 
 ## News
 
@@ -28,6 +30,10 @@ Drivers cannot react to a pedestrian they cannot see. BlindGuard-X places the se
 
 ## Pipeline
 
+<p align="center"><img src="assets/poster/fig2-architecture.png" width="900"/></p>
+
+> System architecture (poster figure 2; labels in Korean). CARLA supplies the two camera streams, pedestrian-signal state, and each vehicle's GNSS position and virtual OBU speed. The Raspberry Pi 5 analyses Cam1 (blue) and Cam2 (green); the server makes the per-vehicle CPA decision and sends caution / warning / danger to the app of the vehicle concerned.
+
 <p align="center"><img src="assets/roi-packing.svg" width="900"/></p>
 
 **Cam1 (crosswalk):** Optical Flow + Track Memory → Adaptive ROI → ROI Packing (416×416) → YOLO26n-NCNN → ByteTrack → Homography<br>
@@ -35,6 +41,10 @@ Drivers cannot react to a pedestrian they cannot see. BlindGuard-X places the se
 **Server:** per-vehicle CPA (dCPA ≤ 2 m, 0 ≤ tCPA ≤ 3 s, constant velocity) + Cam2 early cue + signal state → caution / warning / danger
 
 Details: [system flow](docs/system-flow.md) · [vision method](docs/vision-method.md)
+
+<p align="center"><img src="assets/poster/app-driving.png" width="200"/>&nbsp;&nbsp;&nbsp;<img src="assets/poster/app-danger.png" width="200"/></p>
+
+> Driver app: normal driving (left) and a danger alert (right). The radar shows where the pedestrian is relative to the vehicle's heading.
 
 <p align="center"><img src="assets/demo/screen_case1_danger.jpg" width="800"/></p>
 
