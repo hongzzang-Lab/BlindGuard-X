@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="520" viewBox="0 0 1440 520" role="img" aria-labelledby="t d">
+<title id="t">ROI Packing</title>
+<desc id="d">Regions from optical flow and track memory are cropped from the camera frame, scaled and packed into one 416 by 416 canvas, detected in a single pass, and mapped back to frame coordinates.</desc>
+<rect width="1440" height="520" rx="20" fill="#ffffff"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<rect x="32" y="34" width="5" height="25" rx="2.5" fill="#0969da"/>
+<text x="53" y="54" fill="#57606a" font-size="18" font-weight="700" letter-spacing="2">ROI PACKING</text>
+<!-- frame -->
+<text x="34" y="104" fill="#24292f" font-size="22" font-weight="700">1 · Camera frame</text>
+<text x="34" y="130" fill="#57606a" font-size="16">Far pedestrians are only a few pixels tall</text>
+<rect x="34" y="150" width="520" height="292" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+<path d="M34 330 L554 290 M34 400 L554 340" stroke="#d0d7de" stroke-width="2"/>
+<rect x="96" y="318" width="46" height="96" rx="4" fill="#ddf4ff" stroke="#0969da" stroke-width="3"/>
+<rect x="330" y="262" width="22" height="44" rx="3" fill="#dafbe1" stroke="#2da44e" stroke-width="3"/>
+<rect x="470" y="244" width="14" height="28" rx="3" fill="#fbefff" stroke="#8250df" stroke-width="3"/>
+<text x="84" y="436" fill="#0969da" font-size="14" font-weight="700">optical flow</text>
+<text x="300" y="328" fill="#1a7f37" font-size="14" font-weight="700">track memory</text>
+<text x="438" y="232" fill="#8250df" font-size="14" font-weight="700">optical flow</text>
+<text x="34" y="474" fill="#57606a" font-size="16">ROIs = moving regions + predicted positions of recent tracks</text>
+<!-- arrow -->
+<path d="M584 296 H664" stroke="#57606a" stroke-width="3" fill="none"/><path d="M664 296 l-14 -8 v16 z" fill="#57606a"/>
+<text x="624" y="278" text-anchor="middle" fill="#57606a" font-size="15">crop · scale</text>
+<!-- canvas -->
+<text x="694" y="104" fill="#24292f" font-size="22" font-weight="700">2 · One 416×416 canvas</text>
+<text x="694" y="130" fill="#57606a" font-size="16">Small ROIs may be enlarged (up to 1.5×)</text>
+<rect x="694" y="150" width="292" height="292" rx="10" fill="#f6f8fa" stroke="#24292f" stroke-width="2"/>
+<rect x="708" y="164" width="120" height="264" rx="5" fill="#ddf4ff" stroke="#0969da" stroke-width="3"/>
+<rect x="842" y="164" width="130" height="150" rx="5" fill="#dafbe1" stroke="#2da44e" stroke-width="3"/>
+<rect x="842" y="328" width="88" height="100" rx="5" fill="#fbefff" stroke="#8250df" stroke-width="3"/>
+<text x="694" y="474" fill="#57606a" font-size="16">Does not fit, or covers most of the frame → full frame</text>
+<!-- arrow -->
+<path d="M1016 296 H1096" stroke="#57606a" stroke-width="3" fill="none"/><path d="M1096 296 l-14 -8 v16 z" fill="#57606a"/>
+<text x="1056" y="278" text-anchor="middle" fill="#57606a" font-size="15">detect once</text>
+<!-- output -->
+<text x="1112" y="104" fill="#24292f" font-size="22" font-weight="700">3 · Detect and map back</text>
+<text x="1112" y="130" fill="#57606a" font-size="16">One YOLO26n-NCNN inference</text>
+<rect x="1112" y="150" width="296" height="88" rx="12" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+<text x="1132" y="186" fill="#24292f" font-size="19" font-weight="700">YOLO26n-NCNN × 1</text>
+<text x="1132" y="214" fill="#57606a" font-size="15">about 33 ms on a Raspberry Pi 5</text>
+<rect x="1112" y="252" width="296" height="88" rx="12" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+<text x="1132" y="288" fill="#24292f" font-size="18" font-weight="700">Boxes → frame coordinates</text>
+<text x="1132" y="316" fill="#57606a" font-size="15">ByteTrack keeps identities</text>
+<rect x="1112" y="354" width="296" height="88" rx="12" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+<text x="1132" y="390" fill="#24292f" font-size="19" font-weight="700">Homography → metres</text>
+<text x="1132" y="418" fill="#57606a" font-size="15">position and velocity on the ground</text>
+<text x="1112" y="474" fill="#57606a" font-size="16">Tracks update Track Memory</text>
+</g>
+</svg>

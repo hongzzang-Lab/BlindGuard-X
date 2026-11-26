@@ -2,6 +2,8 @@
 
 > From two roadside cameras to a staged alert on one driver's phone.
 
+<p align="center"><img src="../assets/project-stage-table.svg" alt="Project stages, core questions and status" width="100%"/></p>
+
 This page follows a single observation through the system. It describes what the implementation does, **not** a claim that the system has been validated on public roads.
 
 ```

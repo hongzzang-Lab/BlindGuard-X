@@ -2,6 +2,8 @@
 
 This page documents how Cam1 selects and packs regions before detection (`bgx/cam1_pipeline.py`). The individual ideas are not new; see [related work](related-work.md).
 
+<p align="center"><img src="../assets/roi-packing.svg" alt="ROI Packing: regions from optical flow and track memory are packed into one 416 by 416 canvas and detected once" width="100%"/></p>
+
 ## Why
 
 The Raspberry Pi 5 has no GPU, so input size is speed. At a 416×416 input, one YOLO26n-NCNN inference takes about 33 ms on the Pi. A larger input costs proportionally more pixels (640×640 has roughly 2.4× as many), and a smaller one makes distant pedestrians too small to detect.
