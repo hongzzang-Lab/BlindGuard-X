@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlindGuard-X 실물 Vision 테스트</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0d1117; color: #e6edf3; font-family: system-ui, "Noto Sans KR", sans-serif; font-size: 13px; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #161b22; border-bottom: 1px solid #30363d; }
+  header h1 { font-size: 17px; margin: 0 10px 0 0; letter-spacing: .5px; }
+  header h1 span { color: #58a6ff; }
+  .chip { padding: 3px 9px; border-radius: 10px; background: #21262d; border: 1px solid #30363d; white-space: nowrap; font-size: 12px; }
+  .ok { background: #12361f; border-color: #2ea043; color: #7ee787; }
+  .warn { background: #3d2c00; border-color: #bb8009; color: #f2cc60; }
+  .bad { background: #3d1214; border-color: #da3633; color: #ff7b72; }
+  #clock { margin-left: auto; font-family: ui-monospace, monospace; font-size: 15px; }
+  .mono { font-family: ui-monospace, monospace; }
+  button { font: inherit; color: #e6edf3; background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: #58a6ff; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  input, select { font: inherit; color: #e6edf3; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px 8px; }
+
+  /* 동시 처리 확인 띠 */
+  #gate { display: grid; grid-template-columns: 1fr 1fr 1.3fr auto; gap: 10px; padding: 10px 10px 0; }
+  .camcard { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 12px; }
+  .camcard.on { border-color: #2ea043; } .camcard.off { border-color: #da3633; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: #484f58; flex: none; }
+  .on .dot { background: #3fb950; box-shadow: 0 0 10px #3fb950; } .off .dot { background: #ff4b4b; }
+  .camcard .nm { font-weight: 700; font-size: 14px; } .camcard .role { color: #8b949e; font-size: 11px; }
+  .camcard .num { margin-left: auto; text-align: right; font-family: ui-monospace, monospace; }
+  .camcard .num b { font-size: 24px; color: #79c0ff; } .camcard .num small { color: #8b949e; display: block; font-size: 11px; }
+  #spark { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; }
+  #spark .cap { color: #8b949e; font-size: 11px; display: flex; justify-content: space-between; }
+  #spark canvas { width: 100%; height: 44px; display: block; }
+  #verdict { border-radius: 8px; padding: 8px 18px; display: flex; flex-direction: column; justify-content: center; min-width: 250px; border: 2px solid #30363d; background: #161b22; }
+  #verdict b { font-size: 19px; } #verdict small { color: #8b949e; font-size: 11px; margin-top: 2px; }
+  #verdict.go { border-color: #2ea043; background: #12361f; } #verdict.go b { color: #7ee787; }
+  #verdict.wait { border-color: #bb8009; background: #3d2c00; } #verdict.wait b { color: #f2cc60; }
+  #verdict.no { border-color: #da3633; background: #3d1214; } #verdict.no b { color: #ff7b72; }
+
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.55fr 1fr 0.9fr; gap: 10px; padding: 10px; }
+  .panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; min-height: 0; }
+  .panel h2 { font-size: 13px; margin: 0 0 6px; color: #8b949e; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .panel h2 b { color: #e6edf3; }
+  #stage { position: relative; flex: 1; min-height: 0; background: #000; border-radius: 6px; overflow: hidden; }
+  #big { width: 100%; height: 100%; object-fit: contain; display: block; }
+  #inset { position: absolute; right: 10px; bottom: 10px; width: 26%; border: 2px solid #30363d; border-radius: 6px; background: #000; }
+  #inset img { width: 100%; display: block; border-radius: 4px; }
+  #inset span { position: absolute; left: 6px; top: 4px; font-size: 11px; background: #000a; padding: 1px 6px; border-radius: 4px; }
+  #recbadge { position: absolute; left: 10px; top: 10px; background: #da3633; color: #fff; font-weight: 700; padding: 3px 10px; border-radius: 6px; display: none; animation: fl .8s infinite alternate; }
+  @keyframes fl { from { opacity: 1; } to { opacity: .45; } }
+  #flash { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); font-size: 26px; font-weight: 800; padding: 6px 22px; border-radius: 10px; display: none; }
+  #flash.high { background: #a371f7; color: #fff; display: block; } #flash.cross { background: #da3633; color: #fff; display: block; }
+  .tabs { display: flex; gap: 6px; }
+  .tabs button.on { border-color: #58a6ff; color: #58a6ff; background: #0d2137; }
+  #viz { flex: 1; min-height: 0; width: 100%; background: #0d1117; border-radius: 6px; display: block; }
+  .legend { color: #8b949e; font-size: 11px; margin-top: 5px; line-height: 1.5; }
+
+  #tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; overflow: auto; }
+  .tile { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 8px 10px; }
+  .tile small { color: #8b949e; font-size: 11px; display: block; }
+  .tile b { font-family: ui-monospace, monospace; font-size: 26px; color: #79c0ff; line-height: 1.2; }
+  .tile b i { font-style: normal; font-size: 13px; color: #8b949e; margin-left: 3px; }
+  .tile.wide { grid-column: span 2; } .tile.good b { color: #7ee787; } .tile.alert b { color: #ff7b72; }
+  .tile em { font-style: normal; color: #8b949e; font-size: 11px; }
+
+  footer { display: grid; grid-template-columns: 430px 1fr; gap: 10px; padding: 0 10px 10px; height: 215px; }
+  #ctl .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  #ctl select { flex: 1; min-width: 150px; } #ctl input { width: 92px; }
+  #btnStart { background: #1f6feb; border-color: #1f6feb; font-weight: 700; padding: 9px 20px; font-size: 15px; }
+  #btnStop { background: #da3633; border-color: #da3633; font-weight: 700; padding: 9px 20px; font-size: 15px; }
+  #guide { color: #8b949e; font-size: 12px; min-height: 18px; }
+  #timer { font-family: ui-monospace, monospace; font-size: 22px; color: #f2cc60; margin-left: auto; }
+  #msg { color: #ff7b72; font-size: 12px; min-height: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; color: #8b949e; font-weight: 500; border-bottom: 1px solid #30363d; padding: 4px 6px; position: sticky; top: 0; background: #161b22; white-space: nowrap; }
+  td { padding: 4px 6px; border-bottom: 1px solid #21262d; white-space: nowrap; font-family: ui-monospace, monospace; }
+  td.t { font-family: inherit; }
+  .scroll { overflow: auto; flex: 1; min-height: 0; }
+  .vd { padding: 1px 7px; border-radius: 4px; font-weight: 700; font-family: system-ui, sans-serif; }
+  .vd.g { background: #12361f; color: #7ee787; } .vd.r { background: #3d1214; color: #ff7b72; } .vd.n { background: #21262d; color: #8b949e; }
+
+  /* 거리 보정 서랍 */
+  #drawer { position: fixed; right: 0; top: 46px; bottom: 0; width: 380px; background: #161b22; border-left: 1px solid #30363d; padding: 14px; display: none; flex-direction: column; gap: 10px; z-index: 5; overflow: auto; }
+  #drawer.open { display: flex; }
+  #drawer h3 { margin: 0; font-size: 15px; } #drawer p { margin: 0; color: #8b949e; line-height: 1.6; font-size: 12px; }
+  #drawer .row { display: flex; gap: 8px; align-items: center; } #drawer input { width: 80px; }
+  #cmsg { font-size: 12px; min-height: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>BlindGuard-X <span>실물 Vision 테스트</span></h1>
+  <span class="chip" id="cPi">Pi</span>
+  <span class="chip" id="cModel">Raspberry Pi 5 · USB 웹캠 2대</span>
+  <span class="chip" id="cH">바닥 보정</span>
+  <button id="btnCal" style="padding:3px 10px;font-size:12px">거리 보정</button>
+  <span id="clock"></span>
+</header>
+
+<section id="gate">
+  <div class="camcard" id="card1"><span class="dot"></span>
+    <div><div class="nm">Cam1 · 횡단보도</div><div class="role">YOLO26n-NCNN + ByteTrack + Homography</div></div>
+    <div class="num"><b id="f1">–</b> FPS<small id="m1">–</small></div></div>
+  <div class="camcard" id="card2"><span class="dot"></span>
+    <div><div class="nm">Cam2 · 대기구역</div><div class="role">MOG2 + Sparse LK + EMR</div></div>
+    <div class="num"><b id="f2">–</b> FPS<small id="m2">–</small></div></div>
+  <div id="spark"><div class="cap"><span>두 카메라 처리 속도 (최근 2분) · <span style="color:#79c0ff">■ Cam1</span> <span style="color:#d2a8ff">■ Cam2</span></span><span id="temp" class="mono"></span></div><canvas id="sp" width="700" height="88"></canvas></div>
+  <div id="verdict"><b id="vT">확인 중</b><small id="vS">Pi 한 대가 두 카메라를 동시에 처리해야 테스트 가능</small></div>
+</section>
+
+<main>
+  <div class="panel">
+    <h2><span>실시간 분석 화면 · <b id="bigName">Cam1</b></span>
+      <span class="tabs"><button id="tab1" class="on">Cam1 테스트</button><button id="tab2">Cam2 테스트</button></span></h2>
+    <div id="stage"><img id="big" alt=""><div id="inset"><img id="small" alt=""><span id="smallName">Cam2</span></div>
+      <div id="recbadge">● REC</div><div id="flash"></div></div>
+  </div>
+  <div class="panel">
+    <h2><span id="vizTitle">바닥 위치 (위에서 본 모습)</span><span id="vizSub" class="mono"></span></h2>
+    <canvas id="viz" width="760" height="760"></canvas>
+    <div class="legend" id="vizLegend"></div>
+  </div>
+  <div class="panel">
+    <h2><span id="tilesTitle">실시간 수치</span><span id="tilesSub"></span></h2>
+    <div id="tiles"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="panel" id="ctl">
+    <h2><span>테스트 진행 · <b id="ctlCam">Cam1</b></span><span id="timer"></span></h2>
+    <div class="row"><select id="selSc"></select><input id="inNote" placeholder="메모 (거리 등)"><input id="inSec" placeholder="초 (자동 끝)" style="width:98px"></div>
+    <div class="row"><button id="btnStart">▶ 시작</button><button id="btnStop" style="display:none">■ 끝</button>
+      <button id="btnBg" title="Cam2 가 빈 배경을 다시 배움 (화면에 사람이 없을 때)">Cam2 배경 다시</button>
+      <label style="display:flex;align-items:center;gap:4px;color:#8b949e"><input type="checkbox" id="chkRec" checked style="width:auto"> 화면 녹화</label></div>
+    <div id="guide"></div><div id="msg"></div><div id="recmsg" style="color:#7ee787;font-size:12px"></div>
+  </div>
+  <div class="panel">
+    <h2><span>테스트 결과</span><span class="mono" id="resSub"></span></h2>
+    <div class="scroll"><table><thead><tr><th>번호</th><th>카메라</th><th>상황</th><th>길이</th><th>FPS</th><th>처리 ms (중앙/95%)</th><th>핵심 결과</th><th>같이 켠 카메라</th><th>판정</th></tr></thead><tbody id="res"></tbody></table></div>
+  </div>
+</footer>
+
+<aside id="drawer">
+  <h3>Cam1 거리 보정</h3>
+  <p>사람이 자리에 <b>가만히 선 뒤</b>, 그 자리를 삼각대 바로 아래 기준으로 적고 <b>기록</b>을 누릅니다. 4곳 이상(좌우로 벌려서) 모이면 <b>보정 적용</b>.<br>오른쪽은 카메라가 보는 방향 기준, 왼쪽은 음수.</p>
+  <div class="row">앞 <input id="cF" placeholder="m"> 오른쪽 <input id="cR" placeholder="m" value="0"> <button id="cAdd">기록</button></div>
+  <div id="cmsg"></div>
+  <table><thead><tr><th>#</th><th>앞 m</th><th>오른쪽 m</th><th>발 (픽셀)</th><th>오차 m</th><th></th></tr></thead><tbody id="cPts"></tbody></table>
+  <div class="row"><button id="cApply" style="background:#1f6feb;border-color:#1f6feb">보정 적용</button><button id="cClear">모두 지우기</button><button id="cDrop" title="지금 적용된 보정을 지움. 위치·거리는 표시하지 않고 속도는 사람 키 기준 추정으로 바뀜">적용된 보정 지우기</button><button id="cClose" style="margin-left:auto">닫기</button></div>
+  <p id="cInfo"></p>
+  <hr style="border:0;border-top:1px solid #30363d;width:100%">
+  <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="chkDemo" style="width:auto"> 속도 예시값 표시 (2.2~3.0 m/s)</label>
+  <p>측정값 대신 임의의 예시값을 보여 줍니다. 화면 구성을 먼저 잡아 두는 용도이고, 영상에는 <b>(demo)</b>, 수치 칸에는 <b>(예시값)</b> 표시가 붙으며 결과 기록에는 들어가지 않습니다.</p>
+</aside>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const p2 = (n) => String(n).padStart(2, "0");
+const nz = (v, d = "–") => (v === null || v === undefined ? d : v);
+async function post(act, b) { const r = await fetch("/api/vision/" + act, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(b || {})}); return r.json(); }
+let cam = "cam1", ST = null, lastFlash = 0, scFilled = null;
+
+function camLoop(getCam, img) {
+  const loader = new Image(); let busy = false, since = 0;
+  loader.onload = () => { img.src = loader.src; busy = false; };
+  loader.onerror = () => { busy = false; };
+  setInterval(() => {
+    if (busy && Date.now() - since > 2000) busy = false;
+    if (!busy) { busy = true; since = Date.now(); loader.src = `/api/preview/${getCam()}?t=${Date.now()}`; }
+  }, 100);
+}
+camLoop(() => cam, $("big")); camLoop(() => (cam === "cam1" ? "cam2" : "cam1"), $("small"));
+setInterval(() => { const d = new Date(); $("clock").textContent = `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`; }, 250);
+
+function setCam(c) {
+  if (ST && ST.test) return;
+  cam = c; scFilled = null;
+  $("tab1").classList.toggle("on", c === "cam1"); $("tab2").classList.toggle("on", c === "cam2");
+}
+$("tab1").onclick = () => setCam("cam1"); $("tab2").onclick = () => setCam("cam2");
+$("btnCal").onclick = () => $("drawer").classList.toggle("open"); $("cClose").onclick = () => $("drawer").classList.remove("open");
+
+// ── 화면 녹화: 테스트 시작~끝 동안 이 페이지 화면을 녹화해 노트북 realtest/video/ 에 저장 ──
+let scr = null, mr = null, upQ = Promise.resolve(), stopTimer = null, recSeen = false;
+async function ensureScreen() {
+  if (scr && scr.active) return true;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) return false;
+  try { scr = await navigator.mediaDevices.getDisplayMedia({video: {frameRate: 30}, audio: false, preferCurrentTab: true, selfBrowserSurface: "include"}); }
+  catch (e) { console.warn("화면 공유 실패: " + e); scr = null; return false; }
+  scr.getVideoTracks()[0].onended = () => { scr = null; };
+  return true;
+}
+function recStart(base) {
+  const mime = ["video/mp4;codecs=avc1.640028", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((m) => MediaRecorder.isTypeSupported(m));
+  if (!mime) { $("recmsg").textContent = ""; $("msg").textContent = "이 브라우저는 화면 녹화를 지원하지 않음"; return; }
+  const file = base + (mime.startsWith("video/mp4") ? ".mp4" : ".webm");
+  let seq = 0; upQ = Promise.resolve(); recSeen = false;
+  mr = new MediaRecorder(scr, {mimeType: mime, videoBitsPerSecond: 8000000});
+  mr.ondataavailable = (e) => { if (e.data.size) { const n = seq++; upQ = upQ.then(() => fetch(`/api/vision/rec/${file}?seq=${n}`, {method: "POST", body: e.data})).catch(() => {}); } };
+  mr.onstop = () => { upQ = upQ.then(() => fetch(`/api/vision/rec/${file}?done=1`, {method: "POST"})).then((r) => r.json()).then((r) => { $("recmsg").textContent = r.ok ? `화면 녹화 저장됨: ${r.file} (${r.mb} MB)` : "화면 녹화 저장 실패: " + r.error; }).catch(() => { $("recmsg").textContent = "화면 녹화 저장 실패"; }); mr = null; };
+  mr.start(1000);
+  $("recmsg").textContent = "화면 녹화 중 → video/" + file;
+}
+function recStopSoon() {   // 결과 줄이 표에 뜨는 모습까지 담기도록 1.5초 뒤에 끝냄
+  if (!mr || mr.state !== "recording" || stopTimer) return;
+  stopTimer = setTimeout(() => { stopTimer = null; if (mr && mr.state === "recording") mr.stop(); }, 1500);
+}
+$("btnStart").onclick = async () => {
+  $("msg").textContent = "";
+  const want = $("chkRec").checked;
+  let have = false;
+  if (want) have = await ensureScreen();
+  const r = await post("start", {cam, scenario: $("selSc").value, note: $("inNote").value, seconds: parseFloat($("inSec").value) || null, screen: have});
+  if (!r.ok) { $("msg").textContent = r.error; return; }
+  if (!r.recording) $("msg").textContent = "Pi 녹화 명령이 전달되지 않음";
+  if (want && !have) { $("recmsg").style.color = "#f2cc60"; $("recmsg").textContent = "화면 녹화 없이 진행 (화면 공유를 허용하지 않았거나 지원하지 않는 브라우저)"; }
+  else $("recmsg").style.color = "#7ee787";
+  if (have) recStart(r.screen);
+};
+$("btnStop").onclick = async () => { const r = await post("stop"); if (!r.ok) $("msg").textContent = r.error; };
+$("btnBg").onclick = async () => { await post("reset_bg"); $("msg").textContent = "Cam2 배경을 다시 배우는 중 (3초쯤 화면을 비워 두기)"; setTimeout(() => $("msg").textContent = "", 4000); };
+$("cAdd").onclick = async () => {
+  const r = await post("calib_add", {fwd: $("cF").value, right: $("cR").value});
+  $("cmsg").style.color = r.ok ? "#7ee787" : "#ff7b72"; $("cmsg").textContent = r.ok ? `기록됨 (${r.n}곳)` : r.error;
+};
+$("cApply").onclick = async () => {
+  const r = await post("calib_apply");
+  $("cmsg").style.color = r.ok ? "#7ee787" : "#ff7b72"; $("cmsg").textContent = r.ok ? `보정 적용됨 · 평균 오차 ${r.reproj_mean} m` : r.error;
+};
+$("cClear").onclick = () => post("calib_del", {});
+$("chkDemo").onchange = async () => {
+  const r = await post("demo_speed", {on: $("chkDemo").checked});
+  $("cmsg").style.color = r.ok ? "#7ee787" : "#ff7b72"; $("cmsg").textContent = r.ok ? (r.on ? "속도 예시값 표시 켬" : "속도 예시값 표시 끔 (실제 추정값으로 돌아감)") : r.error;
+  if (!r.ok) $("chkDemo").checked = !$("chkDemo").checked;
+};
+$("cDrop").onclick = async () => {
+  const r = await post("calib_clear");
+  $("cmsg").style.color = r.ok ? "#7ee787" : "#ff7b72"; $("cmsg").textContent = r.ok ? "적용된 보정을 지움 → 속도는 사람 키(1.7 m) 기준 추정으로 표시" : r.error;
+};
+
+// ── 그림 ──
+function drawSpark(st) {
+  const c = $("sp"), g = c.getContext("2d"), W = c.width, H = c.height;
+  g.clearRect(0, 0, W, H);
+  const h = st.fps_hist, top = Math.max(12, ...h.map((x) => Math.max(x[1], x[2]))) * 1.15;
+  const X = (ms) => W + ms / 120000 * W, Y = (v) => H - 4 - v / top * (H - 10);
+  g.strokeStyle = "#30363d"; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(0, Y(st.min_fps)); g.lineTo(W, Y(st.min_fps)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = "#8b949e"; g.font = "18px ui-monospace, monospace"; g.fillText("기준 " + st.min_fps + " FPS", 6, Y(st.min_fps) - 5);
+  [[1, "#79c0ff"], [2, "#d2a8ff"]].forEach(([i, col]) => {
+    g.strokeStyle = col; g.lineWidth = 3; g.beginPath();
+    h.forEach((x, k) => { if (k) g.lineTo(X(x[0]), Y(x[i])); else g.moveTo(X(x[0]), Y(x[i])); });
+    g.stroke();
+  });
+}
+const COLS = ["#58a6ff", "#f2cc60", "#7ee787", "#ff7b72", "#d2a8ff", "#ffa657", "#39d0d8"];
+function drawBev(st) {
+  const c = $("viz"), g = c.getContext("2d"), W = c.width, H = c.height;
+  g.fillStyle = "#0d1117"; g.fillRect(0, 0, W, H);
+  const camFrame = st.calib && st.calib.camera_frame;
+  const pts = st.trail.map((t) => [t[2], t[3]]).concat(st.peds.filter((p) => p.x !== null).map((p) => [p.x, p.y]));
+  if (!st.has_H) { g.fillStyle = "#8b949e"; g.font = "22px sans-serif"; g.textAlign = "center"; g.fillText("바닥 보정이 없어 위치·거리는 표시하지 않음", W / 2, H / 2 - 30); g.fillText("속도는 사람 키(1.7 m) 기준으로 추정해 표시", W / 2, H / 2 + 2); g.fillText("(위 '거리 보정' 을 하면 위치·거리까지 표시)", W / 2, H / 2 + 34); g.textAlign = "left"; return; }
+  let x0, x1, y0, y1;
+  if (camFrame) {
+    const far = Math.max(10, ...pts.map((p) => -p[1] + 1.5)), half = Math.max(5, ...pts.map((p) => Math.abs(p[0]) + 1));
+    x0 = -half; x1 = half; y0 = -far; y1 = 1.6;
+  } else {
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    x0 = Math.min(-5, ...xs.map((v) => v - 1)); x1 = Math.max(5, ...xs.map((v) => v + 1)); y0 = Math.min(-8, ...ys.map((v) => v - 1)); y1 = Math.max(3, ...ys.map((v) => v + 1));
+  }
+  const s = Math.min(W / (x1 - x0), H / (y1 - y0)), ox = (W - s * (x1 - x0)) / 2, oy = (H - s * (y1 - y0)) / 2;
+  // 카메라 기준 보정이면 Cam1 을 아래에 두고 먼 쪽이 위로 가게 (카메라가 보는 방향 = 위)
+  const X = (x) => ox + (x - x0) * s, Y = camFrame ? (y) => oy + (y - y0) * s : (y) => H - oy - (y - y0) * s;
+  g.font = "16px ui-monospace, monospace";
+  if (camFrame) {
+    for (let r = 2; r <= -y0 + 1; r += 2) {
+      g.strokeStyle = r % 4 ? "#21262d" : "#30363d"; g.lineWidth = 1.5; g.beginPath(); g.arc(X(0), Y(0), r * s, Math.PI, 2 * Math.PI); g.stroke();
+      g.fillStyle = "#8b949e"; g.fillText(r + " m", X(0) + 6, Y(-r) - 4);
+    }
+    g.strokeStyle = "#30363d"; g.beginPath(); g.moveTo(X(0), Y(0)); g.lineTo(X(0), Y(y0)); g.stroke();
+    g.fillStyle = "#58a6ff"; g.beginPath(); g.moveTo(X(0) - 14, Y(0) + 20); g.lineTo(X(0) + 14, Y(0) + 20); g.lineTo(X(0), Y(0) - 4); g.fill();
+    g.fillStyle = "#8b949e"; g.fillText("Cam1 (삼각대)", X(0) + 22, Y(0) + 18);
+  } else {
+    g.strokeStyle = "#21262d"; g.lineWidth = 1;
+    for (let x = Math.ceil(x0); x <= x1; x++) { g.beginPath(); g.moveTo(X(x), 0); g.lineTo(X(x), H); g.stroke(); }
+    for (let y = Math.ceil(y0); y <= y1; y++) { g.beginPath(); g.moveTo(0, Y(y)); g.lineTo(W, Y(y)); g.stroke(); }
+  }
+  const by = {};
+  st.trail.forEach((t) => { (by[t[1]] = by[t[1]] || []).push(t); });
+  Object.keys(by).forEach((id) => {
+    const col = COLS[id % COLS.length], a = by[id];
+    for (let i = 1; i < a.length; i++) {
+      if (a[i][0] - a[i - 1][0] > 1200) continue;
+      g.globalAlpha = Math.max(0.12, 1 + a[i][0] / 8000); g.strokeStyle = col; g.lineWidth = 4;
+      g.beginPath(); g.moveTo(X(a[i - 1][2]), Y(a[i - 1][3])); g.lineTo(X(a[i][2]), Y(a[i][3])); g.stroke();
+    }
+  });
+  g.globalAlpha = 1;
+  st.peds.forEach((p) => {
+    if (p.x === null) return;
+    const col = COLS[p.id % COLS.length];
+    g.fillStyle = col; g.beginPath(); g.arc(X(p.x), Y(p.y), 11, 0, 7); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 2; g.stroke();
+    g.fillStyle = "#e6edf3"; g.font = "bold 18px ui-monospace, monospace";
+    g.fillText("#" + p.id + (camFrame ? "  " + Math.hypot(p.x, p.y).toFixed(1) + " m" : "") + (p.v !== null ? "  " + p.v.toFixed(1) + " m/s" + (p.v_src === "demo" ? " (예시)" : "") : ""), X(p.x) + 16, Y(p.y) + 6);
+  });
+}
+function drawEmr(st) {
+  const c = $("viz"), g = c.getContext("2d"), W = c.width, H = c.height, L = 60, R = 16, T = 30, B = 44;
+  g.fillStyle = "#0d1117"; g.fillRect(0, 0, W, H);
+  const X = (ms) => W - R + ms / 20000 * (W - L - R), Y = (v) => H - B - v * (H - T - B);
+  g.font = "17px ui-monospace, monospace";
+  [0, 0.25, 0.5, 0.75, 1].forEach((v) => { g.strokeStyle = "#21262d"; g.lineWidth = 1; g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(W - R, Y(v)); g.stroke(); g.fillStyle = "#8b949e"; g.fillText(v.toFixed(2), 10, Y(v) + 6); });
+  [-20, -15, -10, -5, 0].forEach((s) => { g.fillStyle = "#8b949e"; g.fillText(s === 0 ? "지금" : s + "초", X(s * 1000) - 22, H - 14); });
+  const h = st.emr_hist;
+  for (let i = 1; i < h.length; i++) {   // 출발 징후 구간 색칠
+    if (h[i][2]) { g.fillStyle = "#a371f733"; g.fillRect(X(h[i - 1][0]), T, Math.max(1, X(h[i][0]) - X(h[i - 1][0])), H - T - B); }
+    if (h[i][3] && !h[i - 1][3]) { g.strokeStyle = "#ff4b4b"; g.lineWidth = 3; g.beginPath(); g.moveTo(X(h[i][0]), T); g.lineTo(X(h[i][0]), H - B); g.stroke(); g.fillStyle = "#ff7b72"; g.fillText("경계 넘음", X(h[i][0]) - 86, T + 18); }
+  }
+  g.strokeStyle = "#f2cc60"; g.setLineDash([8, 6]); g.lineWidth = 2; g.beginPath(); g.moveTo(L, Y(st.emr_thr)); g.lineTo(W - R, Y(st.emr_thr)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = "#f2cc60"; g.fillText("기준 " + st.emr_thr, L + 6, Y(st.emr_thr) - 7);
+  g.strokeStyle = "#d2a8ff"; g.lineWidth = 4; g.beginPath();
+  h.forEach((x, k) => { if (k) g.lineTo(X(x[0]), Y(x[1])); else g.moveTo(X(x[0]), Y(x[1])); });
+  g.stroke();
+}
+
+function tile(label, val, unit, cls, sub) { return `<div class="tile ${cls || ""}"><small>${label}</small><b>${nz(val)}${unit ? `<i>${unit}</i>` : ""}</b>${sub ? `<em> ${sub}</em>` : ""}</div>`; }
+function render(st) {
+  ST = st;
+  if (mr) { if (st.test) recSeen = true; else if (recSeen) recStopSoon(); }
+  const t = st.test; if (t) { cam = t.cam; $("tab1").classList.toggle("on", cam === "cam1"); $("tab2").classList.toggle("on", cam === "cam2"); }
+  // 위 띠
+  $("cPi").className = "chip " + (st.edge ? "ok" : "bad"); $("cPi").textContent = st.edge ? "Pi 연결됨" : "Pi 연결 안 됨";
+  $("cH").className = "chip " + (st.has_H ? "ok" : "warn");
+  $("cH").textContent = st.has_H ? ("바닥 보정 있음" + (st.calib && st.calib.camera_frame ? ` (거리 ${st.calib.n}곳)` : "")) : "바닥 보정 없음";
+  if (st.model || st.cam1_mode) $("cModel").textContent = "Raspberry Pi 5 · " + (st.model ? st.model.split("/").pop().replace("_ncnn_model", "-NCNN") : "") + (st.cam1_mode ? " · ROI " + st.cam1_mode : "");
+  [["1", st.cam1, st.ok.cam1], ["2", st.cam2, st.ok.cam2]].forEach(([i, s, ok]) => {
+    $("card" + i).className = "camcard " + (ok ? "on" : "off");
+    $("f" + i).textContent = s.fps ? s.fps.toFixed(1) : "0.0";
+    $("m" + i).textContent = s.age_ms === null ? "신호 없음" : (s.age_ms > 2000 ? `멈춤 ${(s.age_ms / 1000).toFixed(0)}초` : `프레임당 ${nz(s.ms)} ms`);
+  });
+  $("temp").textContent = st.cam1.temp ? "Pi " + st.cam1.temp + "°C" : "";
+  const v = $("verdict");
+  if (st.ready) { v.className = "go"; $("vT").textContent = "✔ 동시 처리 확인됨"; $("vS").textContent = "Pi 한 대가 Cam1·Cam2 를 함께 처리 중 → 테스트 가능"; }
+  else if (st.both) { v.className = "wait"; $("vT").textContent = "확인 중 " + Math.ceil(st.ready_in_ms / 1000) + "초"; $("vS").textContent = "두 카메라가 3초 동안 계속 처리되면 테스트 가능"; }
+  else { v.className = "no"; $("vT").textContent = "✖ 테스트 잠김"; const miss = ["cam1", "cam2"].filter((k) => !st.ok[k]).map((k) => k.replace("cam", "Cam")); $("vS").textContent = (st.edge ? miss.join("·") + " 처리 안 됨" : "Pi 연결 안 됨") + " → 두 카메라 모두 처리돼야 시작 가능"; }
+  drawSpark(st);
+  // 가운데
+  const c1 = cam === "cam1";
+  $("bigName").textContent = c1 ? "Cam1 · 횡단보도 (검출·추적)" : "Cam2 · 대기구역 (출발 징후)"; $("smallName").textContent = c1 ? "Cam2 (동시 처리 중)" : "Cam1 (동시 처리 중)";
+  $("ctlCam").textContent = c1 ? "Cam1" : "Cam2"; $("recbadge").style.display = t ? "block" : "none";
+  $("recbadge").textContent = t ? `● ${t.id} 테스트 중` : "";
+  if (c1) {
+    $("vizTitle").textContent = "바닥 위치 (위에서 본 모습 · Homography)"; $("vizSub").textContent = st.peds.length + "명 추적 중";
+    $("vizLegend").textContent = "점 = 지금 위치, 선 = 최근 8초 궤적, 번호 = 추적 ID" + (st.calib && st.calib.camera_frame ? ", 호 = Cam1 에서의 거리" : "");
+    drawBev(st); $("flash").className = "";
+  } else {
+    const n = st.cam2_now;
+    $("vizTitle").textContent = "EMR 점수 (출발 징후 · 최근 20초)"; $("vizSub").textContent = n ? "지금 " + (n.emr || 0).toFixed(2) : "";
+    $("vizLegend").textContent = "보라 선 = EMR, 노란 점선 = 기준, 보라 띠 = 출발 징후 상태, 빨간 선 = 경계선 넘음";
+    drawEmr(st);
+    const f = $("flash");
+    if (n && n.crossed) { f.className = "cross"; f.textContent = "경계선 넘음 (차도 진입)"; }
+    else if (n && n.state) { f.className = "high"; f.textContent = "출발 징후 감지"; }
+    else f.className = "";
+  }
+  // 수치
+  const live = c1 ? st.cam1 : st.cam2, other = c1 ? st.cam2 : st.cam1;
+  $("tilesTitle").textContent = t ? `${t.id} 테스트 중 수치` : "실시간 수치"; $("tilesSub").textContent = t ? "시작부터 누적" : "최근 3초";
+  let h = tile("처리 속도", live.fps ? live.fps.toFixed(1) : "0.0", "FPS", "good") + tile("프레임당 처리 시간", t ? t.ms_p50 : live.ms, "ms", "", t ? `95%: ${nz(t.ms_p95)} ms` : "");
+  if (c1) {
+    const main = st.peds.find((p) => p.main);
+    h += tile("YOLO 추론 시간", t ? t.yolo_ms_p50 : "–", "ms", "", t ? `전체 프레임의 ${nz(t.yolo_pct)}% 에서 실행` : "테스트 중 집계")
+      + tile("촬영→분석 끝", t ? t.lat_p50 : "–", "ms")
+      + tile("검출률", t ? t.det_pct : (st.peds.length ? "검출" : "없음"), t ? "%" : "", t && t.det_pct >= 90 ? "good" : "")
+      + tile("추적 ID 바뀜", t ? t.id_switch : "–", "번", t && t.id_switch === 0 && t.frames > 20 ? "good" : "", t ? `가장 길게 ${nz(t.track_longest_s)} 초 유지` : "")
+      + tile("거리", main && main.x !== null ? Math.hypot(main.x, main.y).toFixed(1) : "–", "m", "", t && t.dist_min !== null && t.dist_min !== undefined ? `${t.dist_min} ~ ${t.dist_max} m` : "")
+      + tile(main && main.v_src === "demo" ? "이동 속도 (예시값 · 측정 아님)" : (main && main.v_src === "height" ? "이동 속도 (키 1.7 m 기준 추정)" : "이동 속도"), main && main.v !== null ? main.v.toFixed(1) : "–", "m/s", "", t && t.speed_med ? `중앙값 ${t.speed_med}` : "");
+  } else {
+    const n = st.cam2_now || {};
+    h += tile("EMR 지금", n.emr !== undefined && n.emr !== null ? n.emr.toFixed(2) : "–", "", n.state ? "alert" : "", n.warmup ? "배경 학습 중" : (n.present ? "사람 있음" : "비어 있음"))
+      + tile("EMR 최고", t ? t.emr_max : "–", "", "", `기준 ${st.emr_thr}`)
+      + tile("출발 징후", t ? t.emr_high : "–", "번", t && t.emr_high ? "alert" : "")
+      + tile("경계 넘음", t ? t.cross : "–", "번", t && t.cross ? "alert" : "")
+      + tile("징후가 넘음보다 앞선 시간", t && t.lead_s !== null ? t.lead_s : "–", "초", (t && t.lead_s !== null ? "good " : "") + "wide");
+  }
+  h += `<div class="tile wide"><small>같이 처리 중인 ${c1 ? "Cam2" : "Cam1"}</small><b>${other.fps ? other.fps.toFixed(1) : "0.0"}<i>FPS</i></b><em> 프레임당 ${nz(other.ms)} ms · Pi ${nz(st.cam1.temp)}°C</em></div>`;
+  $("tiles").innerHTML = h;
+  // 아래
+  if (scFilled !== cam) { scFilled = cam; $("selSc").innerHTML = st.scenarios[cam].map((s) => `<option value="${s.key}">${s.name}</option>`).join(""); }
+  const sc = st.scenarios[cam].find((s) => s.key === $("selSc").value);
+  $("guide").textContent = t ? "하는 일: " + t.guide : (sc ? "하는 일: " + sc.guide : "");
+  $("btnStart").style.display = t ? "none" : ""; $("btnStop").style.display = t ? "" : "none"; $("btnStart").disabled = !st.ready;
+  $("btnStart").textContent = st.ready ? `▶ ${c1 ? "Cam1" : "Cam2"} 테스트 시작` : "🔒 동시 처리 확인 필요";
+  $("selSc").disabled = !!t; $("tab1").disabled = !!t && cam !== "cam1"; $("tab2").disabled = !!t && cam !== "cam2";
+  $("timer").textContent = t ? `${t.id}  ${t.sec.toFixed(1)}초` + (t.auto_s ? ` / ${t.auto_s}` : "") : "";
+  if (t && t.invalid_why) $("msg").textContent = "무효: " + t.invalid_why;
+  $("res").innerHTML = st.results.slice().reverse().map((r) => {
+    const key = r.cam === "cam1" ? `검출 ${nz(r.det_pct)}% · ID 바뀜 ${nz(r.id_switch)} · ${r.dist_min !== null && r.dist_min !== undefined ? r.dist_min + "~" + r.dist_max + " m" : "거리 –"}`
+      : `EMR 최고 ${nz(r.emr_max)} · 징후 ${r.emr_high} · 넘음 ${r.cross}` + (r.lead_s !== null && r.lead_s !== undefined ? ` · ${r.lead_s}초 먼저` : "");
+    const vd = r.verdict, cls = !vd ? "n" : (/성공|없음/.test(vd) ? "g" : "r");
+    return `<tr><td>${r.id}</td><td class="t">${r.cam === "cam1" ? "Cam1" : "Cam2"}</td><td class="t">${r.scenario}${r.note ? " · " + r.note : ""}</td><td>${r.sec}초</td><td>${nz(r.fps)}</td><td>${nz(r.ms_p50)} / ${nz(r.ms_p95)}</td><td class="t">${key}</td><td>${nz(r.other_fps)} FPS</td><td><span class="vd ${cls}" title="${r.invalid_why || ""}">${vd || "기록"}</span></td></tr>`;
+  }).join("");
+  $("resSub").textContent = st.results.length ? st.results.length + "건 · logs/…/vision_tests.csv" : "";
+  // 보정 서랍
+  const fit = st.calib_fit;
+  $("cPts").innerHTML = st.calib_pts.map((p, i) => `<tr><td>${i + 1}</td><td>${p.fwd}</td><td>${p.right}</td><td>${p.u}, ${p.v}</td><td>${fit ? fit.reproj[i] : ""}</td><td><button style="padding:0 6px" onclick="post('calib_del',{index:${i}})">×</button></td></tr>`).join("");
+  $("cApply").disabled = !fit;
+  $("cInfo").textContent = (st.calib_pts.length && !fit ? st.calib_why + ". " : "") + (fit ? `지금 모은 자리로 계산한 평균 오차 ${fit.mean} m. ` : "") + (st.calib ? `현재 적용된 보정: ${st.calib.n}점` + (st.calib.saved ? ` (${st.calib.saved})` : "") : "");
+}
+async function loop() {
+  try { render(await (await fetch("/api/vision/status")).json()); } catch (e) { $("cPi").className = "chip bad"; $("cPi").textContent = "서버 응답 없음"; }
+  setTimeout(loop, 200);
+}
+loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlindGuard-X 실험 진행</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Noto Sans KR", sans-serif; background: #f3f4f6; color: #111827; font-size: 15px; }
+  header { background: #111827; color: #fff; padding: 10px 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 9; }
+  header b { font-size: 16px; margin-right: 8px; }
+  .lamp { padding: 4px 10px; border-radius: 12px; background: #374151; font-size: 13px; }
+  .g { background: #16a34a; } .y { background: #d97706; } .r { background: #dc2626; }
+  .mon { margin-left: auto; background: #2563eb; color: #fff; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
+  .wrap { display: grid; grid-template-columns: 230px 1fr; min-height: calc(100vh - 50px); }
+  nav { background: #fff; border-right: 1px solid #e5e7eb; padding: 12px 8px; }
+  nav button { display: flex; width: 100%; align-items: center; gap: 8px; text-align: left; border: 0; background: none; padding: 12px 10px; border-radius: 8px; font-size: 15px; cursor: pointer; color: #374151; }
+  nav button.on { background: #eff6ff; color: #1d4ed8; font-weight: 700; }
+  nav .dot { width: 22px; height: 22px; border-radius: 50%; background: #e5e7eb; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex: none; }
+  nav .done .dot { background: #16a34a; color: #fff; }
+  main { padding: 18px 22px; max-width: 1100px; }
+  .step { display: none; } .step.on { display: block; }
+  h1 { font-size: 21px; margin: 0 0 6px; }
+  .lead { color: #4b5563; margin: 0 0 14px; line-height: 1.6; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .btn { border: 0; border-radius: 8px; padding: 10px 16px; font-size: 15px; cursor: pointer; background: #e5e7eb; margin: 4px 6px 4px 0; }
+  .btn.p { background: #2563eb; color: #fff; } .btn.go { background: #16a34a; color: #fff; } .btn.stop { background: #dc2626; color: #fff; }
+  .btn.sel { outline: 3px solid #2563eb; background: #dbeafe; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .big { font-size: 20px; padding: 16px 34px; border-radius: 12px; font-weight: 700; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .check { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+  .check .ic { font-size: 18px; width: 24px; } .check small { color: #6b7280; display: block; }
+  canvas { max-width: 100%; border-radius: 8px; background: #111; display: block; cursor: crosshair; }
+  .cams { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cams img { width: 100%; border-radius: 8px; background: #111; min-height: 150px; }
+  .msg { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: #f3f4f6; font-size: 14px; white-space: pre-wrap; }
+  .msg.ok { background: #dcfce7; } .msg.bad { background: #fee2e2; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tabs button { flex: 1; padding: 14px; font-size: 16px; border-radius: 10px; border: 2px solid #e5e7eb; background: #fff; cursor: pointer; }
+  .tabs button.on { border-color: #2563eb; background: #eff6ff; font-weight: 700; }
+  .exp { display: none; } .exp.on { display: block; }
+  .opt { display: flex; flex-wrap: wrap; gap: 6px; }
+  .opt button { border: 2px solid #e5e7eb; background: #fff; border-radius: 10px; padding: 10px 14px; cursor: pointer; text-align: left; font-size: 14px; }
+  .opt button.on { border-color: #2563eb; background: #eff6ff; }
+  .opt button small { display: block; color: #6b7280; font-size: 12px; margin-top: 2px; }
+  #runbox { text-align: center; padding: 18px; }
+  #timer { font-size: 44px; font-weight: 800; font-family: ui-monospace, monospace; height: 54px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 6px 8px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+  input.s { width: 70px; padding: 6px; font-size: 14px; }
+  details summary { cursor: pointer; color: #4b5563; font-weight: 600; }
+  .pill { padding: 2px 8px; border-radius: 6px; font-size: 13px; font-weight: 700; }
+  .lv-caution { background: #fef3c7; color: #92400e; } .lv-warning { background: #ffedd5; color: #c2410c; } .lv-danger { background: #dc2626; color: #fff; }
+</style>
+</head>
+<body>
+<header>
+  <b>BlindGuard-X 실험 진행</b>
+  <span class="lamp" id="lPi">Pi</span>
+  <span class="lamp" id="lC1">Cam1</span>
+  <span class="lamp" id="lC2">Cam2</span>
+  <span class="lamp" id="lPh">폰 A</span>
+  <span class="lamp" id="lGps">GPS</span>
+  <a class="mon" href="/monitor" target="_blank">▣ 중앙 관제 화면 열기</a>
+</header>
+<div class="wrap">
+<nav>
+  <button data-s="s1"><span class="dot">1</span>연결 확인</button>
+  <button data-s="s2"><span class="dot">2</span>Cam1 바닥 보정</button>
+  <button data-s="s3"><span class="dot">3</span>Cam2 대기구역</button>
+  <button data-s="s4"><span class="dot">4</span>GPS 기준점</button>
+  <button data-s="s5"><span class="dot">5</span>실험</button>
+</nav>
+<main>
+
+<!-- ① 연결 -->
+<section class="step" id="s1">
+  <h1>① 연결 확인</h1>
+  <p class="lead">모두 초록이면 다음 단계로. 빨간 줄은 옆의 설명대로 하면 돼요.</p>
+  <div class="card" id="checks"></div>
+  <div class="card">
+    <b>카메라 확인</b> — 왼쪽이 <b>횡단보도</b>, 오른쪽이 <b>대기구역</b>을 보고 있어야 해요.
+    <div class="cams" style="margin-top:8px"><img id="pv1"><img id="pv2"></div>
+    <p class="lead" style="margin-top:8px">반대로 보이면 카메라 USB 두 개를 서로 바꿔 꽂고 Pi 프로그램을 다시 켜세요.</p>
+  </div>
+  <div class="card">
+    <b>폰 경고 수신 시험</b> — 카메라 없이 폰 A로 주의 → 경고 → 긴급 → 해제를 2초 간격으로 보내요. 앱에서 '주행 시작'을 누른 뒤 하세요.
+    <p style="margin-top:8px"><button class="btn" id="btnTestAlert">폰 A에 시험 경고 보내기</button> <span id="resTA"></span></p>
+  </div>
+  <button class="btn p" onclick="go('s2')">다음 → Cam1 바닥 보정</button>
+</section>
+
+<!-- ② Cam1 보정 -->
+<section class="step" id="s2">
+  <h1>② Cam1 바닥 보정</h1>
+  <p class="lead">카메라를 <b>먼저 단단히 고정</b>하세요 (보정 후 움직이면 다시 해야 함).<br>
+  바닥에 테이프 점 <b>6개 이상</b>을 넓게 붙이고 줄자로 좌표를 잽니다.
+  <b>연석선 위 = y 0</b>, 인도 쪽 +, 차도 쪽 −, <b>횡단보도 가운데 = x 0</b> (인도를 왼쪽에 두고 바라보는 방향이 +x).</p>
+  <div class="card">
+    <div class="row">
+      <button class="btn p" id="snap1">📷 사진 찍기</button>
+      <button class="btn" id="chk1">다음 점은 '검증용'으로 찍기: 끔</button>
+      <button class="btn" id="undo1">마지막 점 지우기</button>
+      <button class="btn" id="clr1">모두 지우기</button>
+    </div>
+    <p class="lead" style="margin:6px 0">사진에서 테이프 점을 클릭 → 뜨는 창에 좌표 입력 (예: <code>0,-1.75</code>). 검증용 점 2~3개도 따로 찍어 두면 정확도를 숫자로 볼 수 있어요.</p>
+    <canvas id="cal1" width="640" height="480"></canvas>
+    <div class="msg" id="pts1">점 0개</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn go big" id="apply1">계산하고 Pi에 적용</button>
+    </div>
+    <div class="msg" id="res1" style="display:none"></div>
+  </div>
+  <button class="btn p" onclick="go('s3')">다음 → Cam2 대기구역</button>
+</section>
+
+<!-- ③ Cam2 -->
+<section class="step" id="s3">
+  <h1>③ Cam2 대기구역</h1>
+  <p class="lead">사진에서 <b>대기구역(인도) 꼭짓점</b>을 차례로 클릭 → <b>'경계선 찍기'</b>를 누르고 <b>차도-인도 경계 양 끝 2점</b> 클릭 → 적용.<br>
+  적용하면 Cam2가 배경을 새로 배우니 <b>5초 동안 구역을 비워 두세요</b>.</p>
+  <div class="card">
+    <div class="row">
+      <button class="btn p" id="snap2">📷 사진 찍기</button>
+      <button class="btn" id="bnd2">경계선 찍기</button>
+      <button class="btn" id="clr2">다시</button>
+    </div>
+    <canvas id="cal2" width="640" height="480" style="margin-top:8px"></canvas>
+    <div class="msg" id="res2">구역 꼭짓점 0개 · 경계선 0/2</div>
+    <button class="btn go big" id="apply2" style="margin-top:8px">Pi에 적용</button>
+  </div>
+  <button class="btn p" onclick="go('s4')">다음 → GPS 기준점</button>
+</section>
+
+<!-- ④ GPS -->
+<section class="step" id="s4">
+  <h1>④ GPS 기준점</h1>
+  <p class="lead">차량 역할 <b>폰 A</b>(앱 켜고 서버 연결)를 표시한 점에 내려놓고 버튼을 누르면 <b>30초 동안 자동으로</b> 기록해요.
+  두 점을 다 찍으면 자동으로 계산돼요. (하늘이 트인 곳에서)</p>
+  <div class="card">
+    <div class="msg" id="gpsNow">폰 A GPS: -</div>
+    <div class="check"><span class="ic" id="ic0">⚪</span><div style="flex:1">
+      <b>점 1 (원점)</b> — 차로선 위, 횡단보도 가운데: x <input class="s" id="p0x" value="0"> y <input class="s" id="p0y" value="-1.75">
+      <div><button class="btn p capb" data-n="p0">이 점에서 30초 기록</button> <span id="st0"></span></div></div></div>
+    <div class="check"><span class="ic" id="ic1">⚪</span><div style="flex:1">
+      <b>점 2 (방향)</b> — 같은 차로선을 따라 20 m 뒤: x <input class="s" id="p1x" value="-20"> y <input class="s" id="p1y" value="-1.75">
+      <div><button class="btn p capb" data-n="p1">이 점에서 30초 기록</button> <span id="st1"></span></div></div></div>
+    <div class="msg" id="anc">기준점: 아직 없음</div>
+  </div>
+  <details class="card"><summary>시험 사이 치우침 보정 (선택, 20~30분마다)</summary>
+    <p class="lead">폰 A를 출발점에 두고 30초 기록하면, 그 시각의 GPS 치우침을 빼 줘요.</p>
+    x <input class="s" id="zx" value="-30"> y <input class="s" id="zy" value="-1.75">
+    <button class="btn p capb" data-n="zero">출발점에서 30초 기록</button> <span id="stz"></span>
+    <button class="btn" id="clearBias">보정 지우기</button>
+  </details>
+  <button class="btn p" onclick="go('s5')">다음 → 실험</button>
+</section>
+
+<!-- ⑤ 실험 -->
+<section class="step" id="s5">
+  <h1>⑤ 실험</h1>
+  <div class="tabs">
+    <button data-e="V1" class="on">① Cam1 비전 성능</button>
+    <button data-e="V2">② Cam2 비전</button>
+    <button data-e="C1">③ 최종 데모 (충돌 경고)</button>
+  </div>
+
+  <div class="exp card on" id="eV1">
+    <p class="lead">같은 동작을 <b>방식을 바꿔 가며</b> 반복해요. 시험마다 결과 영상이 Pi에 자동 녹화돼요.</p>
+    <b>방식</b>
+    <div class="opt" id="modeOpt" style="margin:6px 0 12px">
+      <button data-m="packed" data-p="event" class="on">PACKED · YOLO 필요할 때만<small>최종 구조 (기본)</small></button>
+      <button data-m="packed" data-p="every">PACKED · YOLO 매 프레임<small>포스터 실측 방식</small></button>
+      <button data-m="adaptive" data-p="event">ADAPTIVE<small>ROI 하나로 감싸기</small></button>
+      <button data-m="full" data-p="every">FULL<small>화면 전체 (기준선)</small></button>
+    </div>
+    <b>동작</b>
+    <div class="opt" id="actV1" style="margin-top:6px">
+      <button data-l="1명_횡단" class="on">1명 횡단<small>대기선 → 반대편</small></button>
+      <button data-l="2명_교차">2명 교차<small>횡단보도에서 엇갈림</small></button>
+      <button data-l="원거리_정지">먼 곳에 서 있기<small>10초</small></button>
+      <button data-l="빈화면">빈 화면<small>15초, 아무도 없음</small></button>
+    </div>
+  </div>
+
+  <div class="exp card" id="eV2">
+    <p class="lead">대기구역에서 1명. 시작 전에 구역을 비우고 <button class="btn" id="btnBg">배경 다시 배우기</button></p>
+    <b>동작</b>
+    <div class="opt" id="actV2" style="margin-top:6px">
+      <button data-l="wait" class="on">대기만<small>20초 가만히</small></button>
+      <button data-l="sway">서성임<small>경계선은 넘지 않기</small></button>
+      <button data-l="depart">대기 후 출발<small>5초 서 있다가 경계 넘어 차도로</small></button>
+    </div>
+  </div>
+
+  <div class="exp card" id="eC1">
+    <p class="lead">'시작'을 누르면 <b>3초 카운트다운 후 '삐이'</b>에 차량 A(폰)가 출발해요.
+    <b>안전:</b> 차량 A는 경고가 오면 멈추고, 안 와도 <b>정지선(x −2)</b>에서 반드시 멈춰요.</p>
+    <b>상황</b>
+    <div class="opt" id="actC1" style="margin:6px 0 12px">
+      <button data-sc="R1_상충" class="on">충돌 상황<small>A가 신호 콘 지날 때 B 횡단 → 경고 나와야 함</small></button>
+      <button data-sc="R2_통과후횡단">지나간 뒤 횡단<small>경고 없어야 함</small></button>
+      <button data-sc="R3_대기만">B는 서 있기만<small>경고 없어야 함</small></button>
+      <button data-sc="R4_반대방향">A가 멀어짐<small>경고 없어야 함</small></button>
+    </div>
+    <b>차량 A 속도</b>
+    <div class="opt" id="spdC1" style="margin-top:6px">
+      <button data-l="빠른걸음">빠른 걸음<small>신호 콘 x −4.5</small></button>
+      <button data-l="뛰기" class="on">뛰기<small>신호 콘 x −7</small></button>
+      <button data-l="자전거">자전거<small>신호 콘 x −11</small></button>
+    </div>
+  </div>
+
+  <div class="card" id="runbox">
+    <div id="timer">준비</div>
+    <div id="runinfo" class="lead"></div>
+    <button class="btn go big" id="btnRun">▶ 시작</button>
+    <div class="lead" style="margin-top:6px">Space = 시작/종료 · 메모(선택): <input id="note" style="width:280px;padding:6px" placeholder="예: 사람 가려짐, 출발 늦음"></div>
+  </div>
+
+  <div class="card"><b>방금 한 시험</b><table id="done"></table></div>
+</section>
+
+<details class="card" style="margin-top:20px"><summary>고급 설정 (평소엔 안 건드려도 됨)</summary>
+  <p><b>차량 위치 출처</b>:
+    <button class="btn srcb" data-s="gps">폰 GPS (기본)</button>
+    <button class="btn srcb" data-s="cam">카메라 트랙 지정</button>
+    <button class="btn srcb" data-s="virtual">가상 차량</button></p>
+  <p class="lead">카메라 트랙 지정: 관제 화면 대신 여기에 트랙 번호 입력 <input class="s" id="desig"> <button class="btn" id="btnDesig">지정</button></p>
+  <p><b>Cam1 움직임 민감도</b>: 기준 <input class="s" id="t_thr" value="0.8"> 최소면적 <input class="s" id="t_area" value="20"> 연속 <input class="s" id="t_per" value="2"> YOLO 최소 주기 <input class="s" id="t_skip" value="3">
+    <button class="btn" id="btnTune">적용</button><br><span class="lead">가만히 있는 곳에 상자가 자꾸 생기면 '기준'을 1.5로.</span></p>
+  <p><b>GPS 기준점 직접 입력</b>: 위도 <input class="s" style="width:110px" id="mlat"> 경도 <input class="s" style="width:110px" id="mlng"> 그 점 x <input class="s" id="mx" value="0"> y <input class="s" id="my" value="0"> +x 방위각 <input class="s" id="mb"> <button class="btn" id="anchorManual">적용</button></p>
+  <p class="lead" id="logdir"></p>
+</details>
+</main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const LV = {caution: "주의", warning: "경고", danger: "긴급"};
+let ST = null, running = false, cur = {exp: "V1"}, tStart = null, goAt = null;
+async function j(u, b) { const r = await fetch(u, b !== undefined ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(b)} : {}); return r.json(); }
+const f1 = (v, d = 1) => v == null ? "-" : Number(v).toFixed(d);
+
+// 단계 이동
+function go(id) {
+  document.querySelectorAll(".step").forEach(s => s.classList.toggle("on", s.id === id));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.s === id));
+  try { localStorage.setItem("bgx_step", id); } catch (e) {}
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => go(b.dataset.s));
+let startStep = "s1"; try { startStep = localStorage.getItem("bgx_step") || "s1"; } catch (e) {}
+if (/^#s[1-5]$/.test(location.hash)) startStep = location.hash.slice(1);
+go(startStep);
+
+// 선택 버튼 묶음
+function pick(groupId, cb) {
+  const g = $(groupId);
+  g.querySelectorAll("button").forEach(b => b.onclick = () => { g.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); cb && cb(b); });
+}
+const sel = (groupId) => $(groupId).querySelector("button.on");
+pick("modeOpt", (b) => {
+  j("/api/edge/cmd", {cmd: "set_mode", cam: "cam1", mode: b.dataset.m});
+  j("/api/edge/cmd", {cmd: "set_cfg", cam: "cam1", cfg: {det_policy: b.dataset.p}});
+});
+pick("actV1"); pick("actV2"); pick("actC1"); pick("spdC1");
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  if (running) return;
+  cur.exp = b.dataset.e;
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".exp").forEach(x => x.classList.toggle("on", x.id === "e" + cur.exp));
+});
+$("btnBg").onclick = () => j("/api/edge/cmd", {cmd: "reset_bg", cam: "cam2"});
+
+// 소리
+let ac = null;
+function beep(freq, ms) {
+  ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.frequency.value = freq; o.connect(g); g.connect(ac.destination); g.gain.value = 0.35;
+  o.start(); o.stop(ac.currentTime + ms / 1000);
+}
+
+// 시작/종료
+async function startTrial() {
+  const e = cur.exp;
+  let body = {exp: e, note: $("note").value, countdown_s: 0, raw: e !== "C1"};
+  if (e === "V1") { const m = sel("modeOpt"); body.label = sel("actV1").dataset.l; body.note = `${m.dataset.m}/${m.dataset.p} ${body.note}`; }
+  if (e === "V2") body.label = sel("actV2").dataset.l;
+  if (e === "C1") { body.scenario = sel("actC1").dataset.sc; body.label = sel("spdC1").dataset.l; body.countdown_s = 3; }
+  const r = await j("/api/trial/start", body);
+  running = true; tStart = Date.now(); goAt = Date.now() + (r.go_ms - r.server_now);
+  $("btnRun").textContent = "■ 종료"; $("btnRun").className = "btn stop big";
+  $("runinfo").textContent = `${r.trial_id} · ${body.exp} ${body.scenario || ""} ${body.label || ""}`;
+  let shown = null;
+  if (body.countdown_s) {
+    const cd = setInterval(() => {
+      const left = Math.ceil((goAt - Date.now()) / 1000);
+      if (left > 0) { if (left !== shown) { beep(880, 150); shown = left; } }
+      else { beep(1320, 700); clearInterval(cd); }
+    }, 40);
+  }
+}
+async function stopTrial() {
+  await j("/api/trial/stop", {result_note: $("note").value});
+  running = false; $("note").value = "";
+  $("btnRun").textContent = "▶ 시작"; $("btnRun").className = "btn go big";
+}
+$("btnRun").onclick = () => running ? stopTrial() : startTrial();
+document.addEventListener("keydown", (e) => {
+  if (["INPUT", "TEXTAREA"].includes(e.target.tagName) || !$("s5").classList.contains("on")) return;
+  if (e.code === "Space") { e.preventDefault(); $("btnRun").click(); }
+});
+setInterval(() => {
+  if (!running) { $("timer").textContent = "준비"; return; }
+  const now = Date.now();
+  $("timer").textContent = now < goAt ? String(Math.ceil((goAt - now) / 1000)) : ((now - goAt) / 1000).toFixed(1) + " s";
+}, 100);
+
+// ── 보정: Cam1 ──
+const cal1 = {img: null, pts: [], res: null, check: false};
+function drawCal1() {
+  const c = $("cal1"), g = c.getContext("2d");
+  if (cal1.img) { c.width = cal1.img.width; c.height = cal1.img.height; g.drawImage(cal1.img, 0, 0); } else { g.fillStyle = "#111"; g.fillRect(0, 0, c.width, c.height); g.fillStyle = "#9ca3af"; g.font = "18px sans-serif"; g.fillText("'사진 찍기'를 누르세요", 220, 240); }
+  if (cal1.res && cal1.res.Hinv) {
+    const Hi = cal1.res.Hinv;
+    const P = (x, y) => { const w = Hi[2][0] * x + Hi[2][1] * y + Hi[2][2]; return w > 0 ? [(Hi[0][0] * x + Hi[0][1] * y + Hi[0][2]) / w, (Hi[1][0] * x + Hi[1][1] * y + Hi[1][2]) / w] : null; };
+    const line = (pts, col, wd) => { g.strokeStyle = col; g.lineWidth = wd; g.beginPath(); let f = true; for (const p of pts) { if (!p) { f = true; continue; } f ? g.moveTo(p[0], p[1]) : g.lineTo(p[0], p[1]); f = false; } g.stroke(); };
+    for (let x = -10; x <= 10; x++) { const a = []; for (let y = -10; y <= 5; y += 0.25) a.push(P(x, y)); line(a, x === 0 ? "#facc15" : "#22c55e88", x === 0 ? 2 : 1); }
+    for (let y = -10; y <= 5; y++) { const a = []; for (let x = -10; x <= 10; x += 0.25) a.push(P(x, y)); line(a, y === 0 ? "#ef4444" : "#22c55e88", y === 0 ? 3 : 1); }
+  }
+  cal1.pts.forEach((p, i) => {
+    g.fillStyle = p.check ? "#f59e0b" : "#ef4444"; g.beginPath(); g.arc(p.u, p.v, 6, 0, 7); g.fill();
+    g.fillStyle = "#fff"; g.font = "bold 14px sans-serif"; g.fillText(`${i + 1} (${p.x},${p.y})${p.check ? " 검증" : ""}`, p.u + 8, p.v - 8);
+  });
+  const nf = cal1.pts.filter(p => !p.check).length, nc = cal1.pts.length - nf;
+  $("pts1").textContent = `보정점 ${nf}개 (6개 이상 권장) · 검증점 ${nc}개` + (cal1.pts.length ? "\n" + cal1.pts.map((p, i) => `${i + 1}: (${p.x}, ${p.y})${p.check ? " 검증" : ""}${p.err != null ? "  오차 " + p.err.toFixed(2) + " m" : ""}`).join("   ") : "");
+}
+$("cal1").onclick = (e) => {
+  if (!cal1.img) return;
+  const r = e.target.getBoundingClientRect(), k = e.target.width / r.width;
+  const u = Math.round((e.clientX - r.left) * k), v = Math.round((e.clientY - r.top) * k);
+  const s = prompt(`${cal1.pts.length + 1}번 점의 바닥 좌표 x,y (m)\n예: 0,-1.75`, "");
+  if (!s) return;
+  const m = s.replace(/\s/g, "").split(/[,/]/).map(Number);
+  if (m.length < 2 || m.some(isNaN)) { alert("x,y 형식으로 입력하세요 (예: 1.5,-2)"); return; }
+  cal1.pts.push({u, v, x: m[0], y: m[1], check: cal1.check}); cal1.res = null; drawCal1();
+};
+async function snap(cam, store, draw) {
+  const r = await j("/api/snapshot", {cam});
+  if (!r.ok) { alert("사진 실패: " + r.error); return; }
+  const im = new Image(); im.onload = () => { store.img = im; draw(); }; im.src = `/api/snapshot/${cam}?t=${Date.now()}`;
+}
+$("snap1").onclick = () => snap("cam1", cal1, drawCal1);
+$("chk1").onclick = () => { cal1.check = !cal1.check; $("chk1").textContent = "다음 점은 '검증용'으로 찍기: " + (cal1.check ? "켬" : "끔"); $("chk1").classList.toggle("sel", cal1.check); };
+$("undo1").onclick = () => { cal1.pts.pop(); cal1.res = null; drawCal1(); };
+$("clr1").onclick = () => { if (confirm("점을 모두 지울까요?")) { cal1.pts = []; cal1.res = null; drawCal1(); } };
+$("apply1").onclick = async () => {
+  const f = cal1.pts.filter(p => !p.check), c = cal1.pts.filter(p => p.check);
+  const box = $("res1"); box.style.display = "block";
+  if (f.length < 4) { box.className = "msg bad"; box.textContent = `보정점이 4개 이상 필요해요 (지금 ${f.length}개)`; return; }
+  const r = await j("/api/calib/cam1", {img_pts: f.map(p => [p.u, p.v]), world_pts: f.map(p => [p.x, p.y]), check_img: c.map(p => [p.u, p.v]), check_world: c.map(p => [p.x, p.y]), apply: true});
+  if (!r.ok) { box.className = "msg bad"; box.textContent = "실패: " + r.error; return; }
+  cal1.res = r; f.forEach((p, i) => p.err = r.reproj[i]); c.forEach((p, i) => p.err = r.check ? r.check[i] : null); drawCal1();
+  const ce = r.check_mean;
+  box.className = "msg " + (r.sent ? "ok" : "bad");
+  box.textContent = (r.sent ? "✔ Pi에 적용했어요.\n" : "✘ Pi와 연결이 안 돼서 적용 못 했어요.\n") +
+    (ce != null ? `검증점 평균 오차 ${ce} m ${ce <= 0.3 ? "→ 좋아요" : "→ 커요. 점을 더 넓게 찍거나 좌표를 다시 확인"}` : `보정점 평균 오차 ${r.reproj_mean} m (검증점을 찍으면 실제 정확도를 볼 수 있어요)`) +
+    "\n사진 위 빨간 선이 실제 연석선 테이프와 겹치는지 눈으로 확인하세요.";
+};
+drawCal1();
+
+// ── 보정: Cam2 ──
+const cal2 = {img: null, poly: [], bnd: [], mode: "poly"};
+function drawCal2() {
+  const c = $("cal2"), g = c.getContext("2d");
+  if (cal2.img) { c.width = cal2.img.width; c.height = cal2.img.height; g.drawImage(cal2.img, 0, 0); } else { g.fillStyle = "#111"; g.fillRect(0, 0, c.width, c.height); g.fillStyle = "#9ca3af"; g.font = "18px sans-serif"; g.fillText("'사진 찍기'를 누르세요", 220, 240); }
+  if (cal2.poly.length) {
+    g.strokeStyle = "#22d3ee"; g.fillStyle = "#22d3ee33"; g.lineWidth = 2; g.beginPath();
+    cal2.poly.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.fill(); g.stroke();
+  }
+  if (cal2.bnd.length) { g.strokeStyle = "#ef4444"; g.lineWidth = 5; g.beginPath(); g.moveTo(...cal2.bnd[0]); if (cal2.bnd[1]) g.lineTo(...cal2.bnd[1]); g.stroke(); cal2.bnd.forEach(p => { g.fillStyle = "#ef4444"; g.beginPath(); g.arc(p[0], p[1], 6, 0, 7); g.fill(); }); }
+  $("res2").className = "msg"; $("res2").textContent = `구역 꼭짓점 ${cal2.poly.length}개 · 경계선 ${cal2.bnd.length}/2` + (cal2.mode === "bnd" ? "  ← 지금은 경계선을 찍는 중" : "  ← 지금은 구역 꼭짓점을 찍는 중");
+}
+$("cal2").onclick = (e) => {
+  if (!cal2.img) return;
+  const r = e.target.getBoundingClientRect(), k = e.target.width / r.width;
+  const p = [Math.round((e.clientX - r.left) * k), Math.round((e.clientY - r.top) * k)];
+  if (cal2.mode === "poly") cal2.poly.push(p); else if (cal2.bnd.length < 2) cal2.bnd.push(p);
+  drawCal2();
+};
+$("bnd2").onclick = () => { cal2.mode = "bnd"; $("bnd2").classList.add("sel"); drawCal2(); };
+$("clr2").onclick = () => { cal2.poly = []; cal2.bnd = []; cal2.mode = "poly"; $("bnd2").classList.remove("sel"); drawCal2(); };
+$("snap2").onclick = () => snap("cam2", cal2, drawCal2);
+$("apply2").onclick = async () => {
+  const r = await j("/api/calib/cam2", {polygon: cal2.poly, boundary: cal2.bnd});
+  $("res2").className = "msg " + (r.ok && r.sent ? "ok" : "bad");
+  $("res2").textContent = r.ok ? (r.sent ? "✔ Pi에 적용했어요. 5초 동안 구역을 비워 두세요 (배경 학습)." : "✘ Pi와 연결이 안 돼요") : "✘ " + r.error;
+};
+drawCal2();
+
+// ── GPS 기준점: 30초 자동 ──
+let capTimer = null;
+document.querySelectorAll(".capb").forEach(b => b.onclick = async () => {
+  if (capTimer) return;
+  const n = b.dataset.n, pre = {p0: "p0", p1: "p1", zero: "z"}[n], st = {p0: "st0", p1: "st1", zero: "stz"}[n];
+  const A = ST && ST.apps.find(a => a.vehicle === "A");
+  if (!A || !A.fix) { alert("폰 A의 GPS가 아직 안 들어와요. 앱을 켜고 서버에 연결됐는지 확인하세요."); return; }
+  await j("/api/anchor/capture/start", {name: n, x: parseFloat($(pre + "x").value), y: parseFloat($(pre + "y").value)});
+  document.querySelectorAll(".capb").forEach(x => x.disabled = true);
+  let left = 30;
+  $(st).textContent = `기록 중… ${left}초`;
+  capTimer = setInterval(async () => {
+    left--; $(st).textContent = `기록 중… ${left}초 (폰을 움직이지 마세요)`;
+    if (left > 0) return;
+    clearInterval(capTimer); capTimer = null;
+    const r = await j("/api/anchor/capture/stop", {});
+    document.querySelectorAll(".capb").forEach(x => x.disabled = false);
+    $(st).textContent = r.ok ? `✔ ${r.point.n}개 기록 · 폰 정확도 ±${f1(r.point.mean_acc)} m · 흔들림 ${r.point.spread_p50} m` + (r.bias ? ` · 치우침 보정 (${r.bias})` : "") : "✘ " + r.error;
+    if (r.ok && n !== "zero" && ST && ST.anchor_pts) {
+      const have = Object.assign({}, ST.anchor_pts, {[n]: r.point});
+      if (have.p0 && have.p1) {
+        const c = await j("/api/anchor/compute", {});
+        $("anc").className = "msg " + (c.ok ? "ok" : "bad");
+        $("anc").textContent = c.ok ? `✔ 기준점 설정 완료. GPS로 잰 두 점 거리 ${c.anchor.detail.gps_dist_m} m (실제 ${c.anchor.detail.true_dist_m} m, 차이 ${c.anchor.detail.dist_err_m} m)` : "✘ " + c.error;
+      }
+    }
+  }, 1000);
+});
+$("clearBias").onclick = () => j("/api/anchor/clear_bias", {});
+$("btnTestAlert").onclick = async () => {
+  const r = await j("/api/test_alert", {vehicle: "A"});
+  $("resTA").textContent = r.ok ? "보내는 중… 폰에서 주의→경고→긴급→해제가 나오는지 보세요 (약 8초)" : "✘ " + r.error;
+  if (r.ok) setTimeout(() => {
+    const A = ST && ST.apps.find(a => a.vehicle === "A");
+    $("resTA").textContent = A && A.ack_ms != null ? `✔ 폰이 경고를 받았어요 · 서버→폰 ${A.ack_ms} ms` : "폰 수신 확인(ack)이 안 왔어요. 앱이 '주행 중'인지 확인하세요.";
+  }, 9000);
+};
+
+// 고급
+document.querySelectorAll(".srcb").forEach(b => b.onclick = () => j("/api/source", {source: b.dataset.s}));
+$("btnDesig").onclick = () => j("/api/designate", {track_id: $("desig").value || null});
+$("btnTune").onclick = () => j("/api/edge/cmd", {cmd: "set_cfg", cam: "cam1", cfg: {flow_thr: parseFloat($("t_thr").value), flow_min_area: parseInt($("t_area").value), flow_persist: parseInt($("t_per").value), max_skip: parseInt($("t_skip").value)}});
+$("anchorManual").onclick = async () => { const r = await j("/api/anchor/manual", {lat: $("mlat").value, lng: $("mlng").value, x: $("mx").value, y: $("my").value, bearing: $("mb").value}); alert(r.ok ? "적용됨" : "실패: " + r.error); };
+
+// 카메라 미리보기 (① 단계에서만)
+setInterval(() => {
+  if (!$("s1").classList.contains("on")) return;
+  const t = Date.now(); $("pv1").src = "/api/preview/cam1?t=" + t; $("pv2").src = "/api/preview/cam2?t=" + t;
+}, 700);
+
+// ── 상태 ──
+function lamp(id, text, cls) { $(id).textContent = text; $(id).className = "lamp " + cls; }
+function render(st) {
+  const e = st.edge, live = e.connected && e.age_ms != null && e.age_ms < 1500;
+  const A = st.apps.find(a => a.vehicle === "A");
+  const gpsOk = A && A.fix && A.fix.age_s < 3;
+  lamp("lPi", live ? "Pi 연결" : "Pi 없음", live ? "g" : "r");
+  lamp("lC1", `Cam1 ${f1(e.fps, 0)} FPS${e.has_H ? "" : " · 보정 전"}`, live ? (e.has_H ? "g" : "y") : "");
+  lamp("lC2", st.cam2 ? (st.cam2.warmup ? "Cam2 배경 학습 중" : "Cam2 OK") : "Cam2 -", st.cam2 ? (st.cam2.warmup ? "y" : "g") : "");
+  lamp("lPh", A ? (A.driving ? "폰 A 주행 중" : "폰 A 주행 전") : "폰 A 없음", A ? (A.driving ? "g" : "y") : "r");
+  lamp("lGps", gpsOk ? `GPS ±${f1(A.fix.acc, 0)} m${st.anchor ? "" : " · 기준점 전"}` : "GPS 없음", gpsOk ? (st.anchor ? "g" : "y") : "r");
+  // ① 체크리스트
+  const items = [
+    [live, "Pi 연결·카메라 영상", "Pi에서 python3 pi/edge.py 실행. 계속 안 되면 site.json 의 server_url 이 노트북 IP 인지 확인"],
+    [!!st.cam2 && !st.cam2.warmup, "Cam2 영상", "Pi 창에 [cam2] 오류가 있는지 확인"],
+    [!!A, "폰 A 앱 연결", "폰을 같은 Wi-Fi(핫스팟)에 연결하고 앱 실행. 앱은 노트북 IP로 빌드된 것이어야 함"],
+    [A && A.driving, "앱 '주행 시작'", "앱 화면에서 주행 시작을 누르면 경고가 화면에 뜸"],
+    [gpsOk, "폰 GPS 수신", "하늘이 트인 곳에서 1~2분 기다리기. 위치 권한 '항상 허용'"],
+  ];
+  $("checks").innerHTML = items.map(([ok, t, how]) => `<div class="check"><span class="ic">${ok ? "🟢" : "🔴"}</span><div><b>${t}</b>${ok ? "" : `<small>${how}</small>`}</div></div>`).join("");
+  // 단계 완료 표시
+  const done = {s1: live && A && A.driving && gpsOk, s2: !!e.has_H, s3: !!st.cam2_set, s4: !!st.anchor, s5: st.n_trials > 0};
+  document.querySelectorAll("nav button").forEach(b => { b.classList.toggle("done", !!done[b.dataset.s]); b.querySelector(".dot").textContent = done[b.dataset.s] ? "✓" : b.dataset.s.slice(1); });
+  // ④
+  $("gpsNow").textContent = gpsOk ? `폰 A GPS: 정확도 ±${f1(A.fix.acc, 1)} m · 속력 ${f1(A.fix.speed)} m/s · ${f1(A.fix.age_s)}초 전` : "폰 A GPS: 안 들어옴 (앱·위치 권한 확인)";
+  if (st.anchor && !capTimer && !$("anc").className.includes("ok")) { $("anc").className = "msg ok"; $("anc").textContent = "✔ 기준점 있음" + (st.anchor.detail && st.anchor.detail.dist_err_m != null ? ` (두 점 거리 차이 ${st.anchor.detail.dist_err_m} m)` : ""); }
+  $("ic0").textContent = st.anchor_pts && st.anchor_pts.p0 ? "🟢" : "⚪"; $("ic1").textContent = st.anchor_pts && st.anchor_pts.p1 ? "🟢" : "⚪";
+  document.querySelectorAll(".srcb").forEach(b => b.classList.toggle("sel", b.dataset.s === st.source));
+  // ⑤
+  if (running !== !!st.trial) {  // 다른 창에서 시작/종료한 경우 맞춤
+    running = !!st.trial;
+    $("btnRun").textContent = running ? "■ 종료" : "▶ 시작"; $("btnRun").className = running ? "btn stop big" : "btn go big";
+    if (running) goAt = st.trial.go_ms - st.now + Date.now();
+  }
+  const vA = st.vehicles.find(v => v.id === "A");
+  if (running && st.trial.exp === "C1") $("runinfo").innerHTML = `${st.trial.id} · ${st.trial.scenario} · 차량 A 지금: ${vA && vA.level ? `<span class="pill lv-${vA.level}">${LV[vA.level]}</span>` : "경고 없음"}`;
+  $("done").innerHTML = "<tr><th>시험</th><th>종류</th><th>내용</th><th>길이</th><th>차량 A 경고</th></tr>" + st.trials_done.slice().reverse().map(t => {
+    const exp = t.expected && t.expected.A;
+    const res = t.exp === "C1" ? (t.alert_A ? `<span class="pill lv-${t.alert_A}">${LV[t.alert_A]}</span>` : "없음") + (exp == null ? "" : ((!!t.alert_A) === exp ? " ✔ 기대대로" : " ✘ 기대와 다름")) : "-";
+    return `<tr><td>${t.id}</td><td>${{V1: "Cam1", V2: "Cam2", C1: "데모"}[t.exp] || t.exp}</td><td>${t.scenario || ""} ${t.label || ""}</td><td>${t.sec}s</td><td>${res}</td></tr>`;
+  }).join("");
+  $("logdir").textContent = "서버 기록 폴더: " + st.logdir;
+}
+async function poll() {
+  try { ST = await j("/api/status"); render(ST); }
+  catch (err) { lamp("lPi", "서버 응답 없음", "r"); console.log(err); }
+  setTimeout(poll, 400);
+}
+poll();
+</script>
+</body>
+</html>

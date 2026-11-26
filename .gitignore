@@ -1,0 +1,28 @@
+# 파이썬
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 실험 기록 · 영상 · 그림 (용량이 크고 개인 촬영분 포함)
+logs/
+simdemo/logs/
+obs/
+video/
+*.mkv
+*.mp4
+*.avi
+
+# 모델 · 벤치마크 데이터 · 결과 원본 (각자 내려받거나 다시 만든다)
+models/
+bench/data/
+bench/results/
+*.zip
+
+# 옛 백업
+backup_before_simdemo/
+
+# 편집기 · OS
+.vscode/
+.idea/
+.DS_Store

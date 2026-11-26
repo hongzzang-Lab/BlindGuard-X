@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko" translate="no" class="notranslate">
+<head>
+<meta charset="utf-8">
+<meta name="google" content="notranslate">
+<title>HUD</title>
+<style>
+  /* 촬영용 상태 띠: 창 전체를 띠로 씀 (창 크기에 맞춰 글자가 커짐). OBS 에서 이 창을 CARLA 화면 위쪽에 겹쳐 놓음. */
+  * { box-sizing: border-box; }
+  :root { --u: calc(100vw * 140 / 1280 / 100); }   /* 띠 높이의 1% (띠 = 창 너비의 140/1280) */
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #e6edf3; font-family: system-ui, "Noto Sans KR", "Noto Sans CJK KR", sans-serif; }
+  #band { position: relative; width: 100vw; height: calc(100 * var(--u)); background: #0b0f14; display: grid; grid-template-columns: 27fr 19fr 32fr 22fr; border-bottom: calc(0.6 * var(--u)) solid #30363d; }
+  .cell { padding: calc(6 * var(--u)) 1.1vw; display: flex; flex-direction: column; justify-content: center; border-right: 0.15vw solid #21262d; min-width: 0; }
+  .cell:last-child { border-right: 0; }
+  .lab { font-size: calc(13 * var(--u)); color: #8b949e; letter-spacing: 0.05vw; white-space: nowrap; }
+  #title { font-size: calc(21 * var(--u)); font-weight: 800; line-height: 1.2; word-break: keep-all; }
+  #sub { font-size: calc(12.5 * var(--u)); color: #8b949e; margin-top: calc(3 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sig { display: flex; align-items: center; gap: 0.6vw; font-size: calc(19 * var(--u)); font-weight: 700; white-space: nowrap; }
+  .sig + .sig { margin-top: calc(5 * var(--u)); }
+  .sig small { font-size: calc(13 * var(--u)); color: #8b949e; font-weight: 500; width: 5.2vw; }
+  .lamp { width: calc(22 * var(--u)); height: calc(22 * var(--u)); border-radius: 50%; background: #30363d; flex: none; }
+  .lamp.g { background: #3fb950; box-shadow: 0 0 calc(3 * var(--u)) #3fb950; } .lamp.r { background: #ff4b4b; box-shadow: 0 0 calc(3 * var(--u)) #ff4b4b; }
+  .lamp.f { background: #3fb950; animation: bl .5s steps(1) infinite; }
+  @keyframes bl { 50% { background: #30363d; box-shadow: none; } }
+  .veh { display: flex; align-items: center; gap: 0.8vw; }
+  .veh .id { font-size: calc(15 * var(--u)); color: #8b949e; white-space: nowrap; }
+  .spd { font-family: ui-monospace, monospace; font-size: calc(44 * var(--u)); font-weight: 800; line-height: 1; color: #79c0ff; min-width: 5.2vw; text-align: right; }
+  .spd i { font-style: normal; font-size: calc(12 * var(--u)); color: #8b949e; font-weight: 500; margin-left: 0.3vw; }
+  .chips { display: flex; flex-direction: column; gap: calc(3 * var(--u)); min-width: 0; }
+  .chip { font-size: calc(18 * var(--u)); font-weight: 800; padding: calc(2 * var(--u)) 0.7vw; border-radius: calc(1.5 * var(--u)); white-space: nowrap; background: #21262d; color: #8b949e; text-align: center; }
+  .chip.none { background: #12261a; color: #7ee787; }
+  .chip.caution { background: #ffb000; color: #1a1300; } .chip.warning { background: #f28c28; color: #1f0e00; } .chip.danger { background: #e02424; color: #fff; }
+  .chip.brake { background: #3d1214; color: #ff7b72; font-size: calc(14 * var(--u)); } .chip.noapp { background: #30363d; color: #e6edf3; font-size: calc(14 * var(--u)); }
+  .why { font-size: calc(11.5 * var(--u)); color: #c9d1d9; white-space: nowrap; }
+  /* 결과 한 줄: 왼쪽 두 칸(상황 이름·신호) 위에 겹침 */
+  #result { position: absolute; left: 0; top: 0; width: 46vw; height: 100%; display: none; flex-direction: column; justify-content: center; padding: 0 1.2vw; background: #12361f; border-right: 0.3vw solid #2ea043; }
+  #result.bad { background: #5a0f12; border-color: #ff4b4b; }
+  #result .lab { color: #b7f5c5; } #result.bad .lab { color: #ffc9c5; }
+  #rtext { font-size: calc(19 * var(--u)); font-weight: 800; line-height: 1.25; word-break: keep-all; }
+  #band.collide { background: #5a0f12; } #band.collide .cell { border-color: #7d1a1e; }
+  #idle { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: calc(22 * var(--u)); color: #484f58; background: #0b0f14; }
+</style>
+</head>
+<body>
+<div id="band">
+  <div class="cell"><div id="title">–</div><div id="sub"></div></div>
+  <div class="cell">
+    <div class="sig"><small>보행 신호</small><span class="lamp" id="lp"></span><span id="tp">–</span></div>
+    <div class="sig"><small>차량 신호</small><span class="lamp" id="lv"></span><span id="tv">–</span></div>
+  </div>
+  <div class="cell"><div class="veh"><div><div class="id">차량 A</div><div class="id" id="aNote"></div></div><div class="spd" id="aSpd">–<i>km/h</i></div>
+    <div class="chips"><div class="chip" id="aLv">–</div><div class="why" id="aWhy"></div><div class="chip brake" id="aBrk" style="display:none">브레이크</div></div></div></div>
+  <div class="cell"><div class="veh"><div class="id">차량 B</div><div class="spd" id="bSpd" style="font-size:calc(30 * var(--u));min-width:3.6vw">–<i>km/h</i></div>
+    <div class="chips"><div class="chip" id="bLv" style="font-size:calc(15 * var(--u))">–</div></div></div></div>
+  <div id="result"><div class="lab">결과</div><div id="rtext"></div></div>
+  <div id="idle">BlindGuard-X · 다음 상황 대기 중</div>
+</div>
+<script>
+const VER = "1124b";
+const $ = (id) => document.getElementById(id);
+const LV = {caution: "주의", warning: "경고", danger: "긴급 정지"};
+const WHY = {CPA: "CPA 충돌 예측", EMR: "Cam2 조기 징후", SIGNAL: "신호 전환"};
+const SIGP = {GREEN: ["g", "초록"], FLASH: ["f", "깜빡임"], RED: ["r", "빨강"]}, SIGV = {GREEN: ["g", "초록"], RED: ["r", "빨강"]};
+function spd(el, v) { el.firstChild.nodeValue = v == null ? "–" : Math.round(v); }
+function render(h) {
+  const live = h.connected && (h.running || (h.result && h.result.age_s < 10));
+  $("idle").style.display = live ? "none" : "flex";
+  if (!live) { $("idle").textContent = h.connected ? "BlindGuard-X · 다음 상황 대기 중" : "BlindGuard-X · CARLA 연결 대기"; return; }
+  const noApp = !!(h.meta && h.meta.no_app);
+  $("title").textContent = h.title || "–";
+  $("sub").textContent = h.meta && h.meta.sub ? h.meta.sub : "";
+  const p = SIGP[h.signal.ped] || ["", "–"], v = SIGV[h.signal.veh] || ["", "–"];
+  $("lp").className = "lamp " + p[0]; $("tp").innerHTML = p[1] + (h.signal.ped === "RED" && h.signal.ped_red_s != null && h.running ? ` <span style="font-size:calc(12 * var(--u));color:#8b949e;font-weight:500">${h.signal.ped_red_s.toFixed(0)}초째</span>` : "");
+  $("lv").className = "lamp " + v[0]; $("tv").textContent = v[1];
+  const A = h.veh.A, B = h.veh.B;
+  spd($("aSpd"), A.present ? A.speed_kmh : null); spd($("bSpd"), B.present ? B.speed_kmh : null);
+  $("aNote").textContent = noApp ? "앱 없음" : "";
+  if (noApp) { $("aLv").className = "chip noapp"; $("aLv").textContent = A.level ? `경고 전달 안 됨` : "앱 없음"; $("aWhy").textContent = A.level ? `시스템 판정: ${LV[A.level]}` : ""; }
+  else { $("aLv").className = "chip " + (A.level || "none"); $("aLv").textContent = A.level ? LV[A.level] : "경고 없음"; $("aWhy").textContent = A.level ? (A.reasons || []).map((r) => WHY[r] || r).join(" + ") : ""; }
+  $("aBrk").style.display = A.braking && !h.collision ? "" : "none";
+  $("bLv").className = "chip " + (B.level || "none"); $("bLv").textContent = B.present || h.result ? (B.level ? LV[B.level] : "경고 없음") : "–";
+  $("band").className = h.collision ? "collide" : "";
+  const r = h.result;
+  $("result").style.display = r ? "flex" : "none";
+  if (r) { $("result").className = r.ok === false || h.collision ? "bad" : ""; $("rtext").textContent = r.text; }
+}
+// 창을 띠 모양(너비의 140/1280)으로 맞춤. 브라우저가 막으면 그대로 두고, 그때는 창 아래쪽을 끌어 올려 검은 부분을 없애면 됨
+function fitWindow() { try { const want = Math.round(window.innerWidth * 140 / 1280) + (window.outerHeight - window.innerHeight); if (Math.abs(window.outerHeight - want) > 3) window.resizeTo(window.outerWidth, want); } catch (e) {} }
+setTimeout(fitWindow, 300); setTimeout(fitWindow, 1500);
+let _lastPaint = Date.now(); (function _raf() { _lastPaint = Date.now(); requestAnimationFrame(_raf); })();   // 창이 최소화되면 멈춤 → 서버 점검이 알아챔
+async function loop() {
+  try { render(await (await fetch("/api/hud?v=" + VER + "&paint=" + (Date.now() - _lastPaint))).json()); } catch (e) { $("idle").style.display = "flex"; $("idle").textContent = "서버 응답 없음"; }
+  setTimeout(loop, 100);
+}
+loop();
+</script>
+</body>
+</html>

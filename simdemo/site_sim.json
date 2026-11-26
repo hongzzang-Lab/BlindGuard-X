@@ -1,0 +1,98 @@
+{
+  "_설명": "CARLA 시뮬 데모 설정 (Town10HD_Opt J189). 서버: BGX_SITE=simdemo/site_sim.json, Pi: pi/edge.py --site simdemo/site_sim.json. 바닥 좌표 약속은 site.json 과 같음 (연석선 y=0, 인도 +y, 차도 -y). floor 값은 carla_demo.py 가 J189 에서 뽑아 서버로 보내면 덮어씀",
+  "edge_id": "carla-j189",
+  "server_url": "ws://YOUR-LAPTOP-IP:8000/edge",
+  "_server_url": "노트북 IP 로 바꾸기 (노트북에서 hostname -I). Pi 실행 때 --server 로 줘도 됨",
+  "floor": {
+    "curb_y": 0.0,
+    "road_far_y": -14.0,
+    "crosswalk_x": [-2.0, 2.0],
+    "wait_y": 1.0,
+    "lane_y": -5.25,
+    "cam1_pos": null,
+    "stop_x": null
+  },
+  "cam1": {
+    "_역할": "횡단보도 (Optical Flow + Track Memory → Adaptive ROI + ROI Packing → YOLO26n-NCNN → ByteTrack → Homography). 입력 = CARLA 가상 카메라 (팀 Exp1~3 과 같은 Cam1 위치·1280×720·10 FPS)",
+    "device": "tcp:8765",
+    "width": 1280,
+    "height": 720,
+    "fps": 10,
+    "model": "models/yolo26n_ncnn_model",
+    "imgsz": 416,
+    "conf": 0.1,
+    "mode": "packed",
+    "fixed_roi": [0, 0, 1280, 720],
+    "pipeline": {
+      "draw_curb": true,
+      "flow_thr": 0.8,
+      "full_scan_every": 10,
+      "memory_s": 1.0,
+      "roi_margin": 0.3,
+      "pack_scale_max": 1.5,
+      "flow_min_area": 20,
+      "flow_persist": 2,
+      "flow_blur": 3,
+      "det_policy": "every",
+      "max_skip": 3,
+      "lk_min_pts": 5,
+      "lk_scale": 1.0
+    }
+  },
+  "cam2": {
+    "_역할": "인도 대기구역 (Polygon → MOG2 → Sparse LK → 경계 접근 → EMR). 구역·경계선은 carla_demo.py 가 카메라 모델로 계산해 자동 적용",
+    "device": "tcp:8767",
+    "width": 640,
+    "height": 480,
+    "fps": 10,
+    "pipeline": {
+      "warmup_frames": 30,
+      "shadows": true,
+      "emr_thr": 0.6,
+      "emr_frames": 2,
+      "_emr_frames": "CARLA 실행 시 Cam2 ≈ 7 FPS. 3프레임 연속이면 한 프레임 흔들림에 0.75 s 늦어짐 (11/21 실행 확인) → 2",
+      "near_px": 100,
+      "toward_px": 2.0,
+      "strip_px": 120,
+      "min_blob_px": 300
+    }
+  },
+  "risk": {
+    "_단계": "팀 확정(11/21): dCPA ≤ 2 m 이고 0 ≤ tCPA ≤ 3 s 이면 경고, tCPA ≤ 1.5 s 면 긴급. 주의는 Cam2 출발 예측 몫",
+    "horizon_s": 3.0,
+    "safe_radius_m": 2.0,
+    "level_tcpa_s": {
+      "danger": 1.5,
+      "warning": 3.0,
+      "caution": 3.0
+    },
+    "compensate_latency": true,
+    "max_compensate_s": 0.5,
+    "hold_s": 1.0
+  },
+  "fusion": {
+    "_설명": "bgx/fusion.py. Cam2 EMR 출발 예측 + 차량이 5초 안에 횡단보도 도착 → 주의. 보행 신호 FLASH 또는 RED 3초 이내면 경고로 올림. near_band_y·waiting_xy 는 carla_demo.py 가 J189 기하로 덮어씀",
+    "emr_fresh_s": 1.0,
+    "emr_eta_s": 5.0,
+    "near_band_y": [-7.0, 0.0],
+    "min_speed_mps": 0.5,
+    "use_crossed": true,
+    "signal_boost": true,
+    "red_grace_s": 3.0,
+    "waiting_xy": [0.0, 1.0]
+  },
+  "gps": {
+    "doppler_min_speed": 0.5,
+    "stop_speed": 0.3,
+    "window_s": 4.0,
+    "stale_s": 3.0,
+    "max_extrap_s": 1.5,
+    "max_acc_m": 25.0,
+    "anchor_seconds": 30
+  },
+  "self_exclusion": {
+    "self_radius_m": 8.0,
+    "self_dv_mps": 0.8,
+    "self_min_speed": 0.4
+  }
+}

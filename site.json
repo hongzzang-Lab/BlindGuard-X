@@ -1,0 +1,99 @@
+{
+  "_설명": "현장 설정. 바닥 좌표: 연석선 y=0, 인도 +y, 차도 -y, 단위 m. 연석선 위에 서서 인도를 왼쪽에 두고 바라보는 방향이 +x",
+  "edge_id": "cw-01",
+  "server_url": "ws://YOUR-LAPTOP-IP:8000/edge",
+  "_server_url": "자기 노트북 IP 로 바꾼다 (노트북에서 hostname -I). 또는 pi/edge.py --server ws://<노트북IP>:8000/edge 로 지정",
+  "floor": {
+    "curb_y": 0.0,
+    "road_far_y": -6.0,
+    "crosswalk_x": [
+      -1.5,
+      1.5
+    ],
+    "wait_y": 1.0,
+    "lane_y": -1.75,
+    "cam1_pos": null,
+    "_cam1_pos": "Cam1 바로 아래 바닥 좌표 [x, y]. 넣으면 분석에서 '카메라 거리' 열이 생김",
+    "stop_x": -2.0
+  },
+  "cam1": {
+    "_역할": "횡단보도 (Optical Flow + Track Memory → Adaptive ROI + ROI Packing → YOLO26n-NCNN → ByteTrack → Homography)",
+    "device": "name:USB 2.0 Camera",
+    "width": 640,
+    "height": 480,
+    "fps": 20,
+    "model": "models/yolo26n_ncnn_model",
+    "imgsz": 416,
+    "conf": 0.1,
+    "mode": "packed",
+    "fixed_roi": [
+      0,
+      120,
+      640,
+      360
+    ],
+    "pipeline": {
+      "flow_thr": 0.8,
+      "full_scan_every": 15,
+      "memory_s": 1.0,
+      "roi_margin": 0.3,
+      "pack_scale_max": 1.5,
+      "flow_min_area": 20,
+      "flow_persist": 2,
+      "flow_blur": 3,
+      "det_policy": "event",
+      "max_skip": 3,
+      "lk_min_pts": 5,
+      "lk_scale": 1.0
+    },
+    "v4l2": {
+      "exposure_dynamic_framerate": 0,
+      "_설명": "어두울 때 카메라가 스스로 FPS를 낮추는 기능 끄기 (켜져 있으면 6.5 FPS까지 떨어졌음, 11/21). 그래도 어두우면 auto_exposure=1, exposure_time_absolute=150 처럼 수동 노출"
+    }
+  },
+  "cam2": {
+    "_역할": "인도 대기구역 (Polygon → MOG2 → Sparse LK → 경계 접근 → EMR). 구역은 조작 페이지 '보정' 탭에서 클릭",
+    "device": "name:FHD Camera",
+    "width": 640,
+    "height": 480,
+    "fps": 15,
+    "pipeline": {
+      "warmup_frames": 40,
+      "shadows": true,
+      "emr_thr": 0.7,
+      "near_px": 150,
+      "toward_px": 2.0,
+      "strip_px": 140
+    },
+    "v4l2": {
+      "exposure_dynamic_framerate": 0,
+      "_설명": "어두울 때 카메라가 스스로 FPS를 낮추는 기능 끄기 (켜져 있으면 6.5 FPS까지 떨어졌음, 11/21). 그래도 어두우면 auto_exposure=1, exposure_time_absolute=150 처럼 수동 노출"
+    }
+  },
+  "risk": {
+    "horizon_s": 3.0,
+    "safe_radius_m": 2.0,
+    "level_tcpa_s": {
+      "danger": 1.0,
+      "warning": 2.0,
+      "caution": 3.0
+    },
+    "compensate_latency": true,
+    "max_compensate_s": 0.5,
+    "hold_s": 1.0
+  },
+  "gps": {
+    "doppler_min_speed": 0.5,
+    "stop_speed": 0.3,
+    "window_s": 4.0,
+    "stale_s": 3.0,
+    "max_extrap_s": 1.5,
+    "max_acc_m": 25.0,
+    "anchor_seconds": 30
+  },
+  "self_exclusion": {
+    "self_radius_m": 8.0,
+    "self_dv_mps": 0.8,
+    "self_min_speed": 0.4
+  }
+}

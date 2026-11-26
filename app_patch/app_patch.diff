@@ -1,0 +1,93 @@
+diff -u original/config.dart patched/config.dart
+--- original/config.dart	2026-11-21 01:50:49.232848819 +0900
++++ patched/config.dart	2026-11-21 01:51:03.013501935 +0900
+@@ -38,9 +38,17 @@
+ const bool kUseCloudServer = true;
+ 
+ /// 앱이 실제로 접속할 주소. 위 스위치 하나로 고른다.
+-String get kServerUrl => kUseCloudServer
+-    ? kServerUrlCloud
+-    : (kIsWeb ? kServerUrlWeb : kServerUrlEmulator);
++/// [실물 테스트 11/21] 빌드할 때 서버 주소를 직접 지정 (값을 안 주면 아래 기존 규칙 그대로)
++///   flutter build apk --release --dart-define=SERVER_URL=ws://10.42.0.1:8000/ws
++///   flutter run --dart-define=SERVER_URL=ws://10.42.0.1:8000/ws
++/// 10.42.0.1 = 우분투 노트북 '핫스팟'의 노트북 주소 (실험 서버 server/exp_server.py)
++const String kServerUrlOverride = String.fromEnvironment('SERVER_URL');
++
++String get kServerUrl => kServerUrlOverride.isNotEmpty
++    ? kServerUrlOverride
++    : (kUseCloudServer
++        ? kServerUrlCloud
++        : (kIsWeb ? kServerUrlWeb : kServerUrlEmulator));
+ 
+ /// [데모] 주행 중 GPS "약함", 서버 "끊김" 상태를 일부러 만들어서
+ /// 바텀시트 색(노랑/빨강)과 끊김 배너·음성이 제대로 나오는지 확인한다.
+diff -u original/location_service.dart patched/location_service.dart
+--- original/location_service.dart	2026-11-21 01:50:49.232924525 +0900
++++ patched/location_service.dart	2026-11-21 01:51:03.014277806 +0900
+@@ -27,6 +27,10 @@
+     this.lat,
+     this.lng,
+     this.speedMps,
++    this.rawHeadingDeg,
++    this.headingAccuracyDeg,
++    this.speedAccuracyMps,
++    this.fixTsMs,
+   });
+   final LinkQuality quality; // 양호 / 약함 / 끊김
+   final double? lat; // 위도. 감시 구역 판단에 사용. 모르면 null
+@@ -35,6 +39,13 @@
+   final double? accuracyM; // 오차 반경(m). 펼친 바텀시트에 표시
+   final double? headingDeg; // 진행 방향(북=0°, 시계 방향). 아직 모르면 null
+ 
++  // ↓ [실물 테스트 11/21] 서버로만 보내는 원본 값 (화면에는 안 씀)
++  //   걷는 속도(4 m/s 미만)에서는 headingDeg 를 갱신하지 않으므로, 서버가 직접 판단하도록 GPS 칩 값 그대로 보냄
++  final double? rawHeadingDeg; // GPS 진행 방향 원본(°). 모르면 음수
++  final double? headingAccuracyDeg; // 진행 방향 오차(°)
++  final double? speedAccuracyMps; // 속도 오차(m/s)
++  final int? fixTsMs; // 이 위치가 측정된 시각 (폰 시계, ms) — 전송 시각보다 정확
++
+   static const lost = LocationSnapshot(quality: LinkQuality.lost);
+ }
+ 
+@@ -151,6 +162,10 @@
+       lat: p.latitude,
+       lng: p.longitude,
+       speedMps: p.speed,
++      rawHeadingDeg: p.heading,
++      headingAccuracyDeg: p.headingAccuracy,
++      speedAccuracyMps: p.speedAccuracy,
++      fixTsMs: p.timestamp.millisecondsSinceEpoch,
+     ));
+   }
+ 
+diff -u original/server_link.dart patched/server_link.dart
+--- original/server_link.dart	2026-11-21 01:50:49.233002309 +0900
++++ patched/server_link.dart	2026-11-21 01:51:03.014549862 +0900
+@@ -140,6 +140,11 @@
+       'accuracy_m': s.accuracyM,
+       'speed_mps': s.speedMps,
+       'heading_deg': s.headingDeg,
++      // [실물 테스트 11/21] 실험 서버용 추가 값 (예전 서버는 모르는 값이라 무시)
++      'heading_raw_deg': s.rawHeadingDeg,
++      'heading_acc': s.headingAccuracyDeg,
++      'speed_acc': s.speedAccuracyMps,
++      'fix_ts': s.fixTsMs,
+     });
+   }
+ 
+@@ -175,6 +180,14 @@
+         if (t is int) _ping.add(DateTime.now().millisecondsSinceEpoch - t);
+       case 'alert':
+         _alerts.add(_toAlertState(m));
++        // [실물 테스트 11/21] 받은 즉시 회신 → 서버가 '서버→폰 전달 지연'을 잼 (예전 서버는 모르는 메시지로 무시)
++        final risk = m['risk'];
++        _send({
++          'type': 'alert_ack',
++          'seq': m['seq'],
++          'level': risk is Map ? risk['level'] : null,
++          't': DateTime.now().millisecondsSinceEpoch,
++        });
+       case 'position':
+         final lat = (m['lat'] as num?)?.toDouble();
+         final lng = (m['lng'] as num?)?.toDouble();

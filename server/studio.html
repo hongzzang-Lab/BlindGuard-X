@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko" translate="no" class="notranslate">
+<head>
+<meta charset="utf-8">
+<meta name="google" content="notranslate">
+<title>STUDIO</title>
+<style>
+  /* 촬영 화면 (1920×1080 한 장). OBS 맨 아래에 이 창을 깔고, 그 위에 CARLA(0,120 1280×720)와 PHONE(1300,170 400×880)을 올림.
+     상태 띠 · 관제(Cam1·Cam2·지도·처리 속도) · 경고 기록이 모두 이 한 장에 있음. 창 크기에 맞춰 통째로 줄어듦(F11 전체 화면 권장). */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #e6edf3; font-family: system-ui, "Noto Sans KR", "Noto Sans CJK KR", sans-serif; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; background: #0b0f14; overflow: hidden; }
+  .mono { font-family: ui-monospace, "DejaVu Sans Mono", monospace; }
+
+  /* ── 위 띠 ── */
+  #band { position: absolute; left: 0; top: 0; width: 1920px; height: 120px; display: grid; grid-template-columns: 500px 330px 640px 450px; border-bottom: 3px solid #30363d; background: #0b0f14; }
+  #band.collide { background: #5a0f12; }
+  .cell { padding: 0 22px; display: flex; flex-direction: column; justify-content: center; border-right: 2px solid #21262d; min-width: 0; }
+  .cell:last-child { border-right: 0; }
+  #title { font-size: 30px; font-weight: 800; line-height: 1.2; word-break: keep-all; }
+  #sub { font-size: 17px; color: #8b949e; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sig { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 700; white-space: nowrap; }
+  .sig + .sig { margin-top: 8px; }
+  .sig small { font-size: 17px; color: #8b949e; font-weight: 500; width: 78px; }
+  .sig span.el { font-size: 16px; color: #8b949e; font-weight: 500; }
+  .lamp { width: 30px; height: 30px; border-radius: 50%; background: #30363d; flex: none; }
+  .lamp.g { background: #3fb950; box-shadow: 0 0 12px #3fb950; } .lamp.r { background: #ff4b4b; box-shadow: 0 0 12px #ff4b4b; }
+  .lamp.f { background: #3fb950; animation: bl .5s steps(1) infinite; }
+  @keyframes bl { 50% { background: #30363d; box-shadow: none; } }
+  .veh { display: flex; align-items: center; gap: 16px; }
+  .veh .id { font-size: 19px; color: #8b949e; white-space: nowrap; line-height: 1.35; }
+  .spd { font-family: ui-monospace, monospace; font-size: 62px; font-weight: 800; line-height: 1; color: #79c0ff; min-width: 112px; text-align: right; white-space: nowrap; }
+  .spd i { font-style: normal; font-size: 17px; color: #8b949e; font-weight: 500; margin-left: 5px; }
+  .chips { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .chip { font-size: 25px; font-weight: 800; padding: 3px 16px; border-radius: 8px; white-space: nowrap; background: #21262d; color: #8b949e; text-align: center; }
+  .chip.none { background: #12261a; color: #7ee787; }
+  .chip.caution { background: #ffb000; color: #1a1300; } .chip.warning { background: #f28c28; color: #1f0e00; } .chip.danger { background: #e02424; color: #fff; }
+  .chip.noapp { background: #30363d; color: #e6edf3; font-size: 20px; }
+  .why { font-size: 16px; color: #c9d1d9; white-space: nowrap; }
+  .brk { font-size: 17px; font-weight: 800; color: #ff7b72; background: #3d1214; border-radius: 6px; padding: 2px 10px; display: none; }
+  #result { position: absolute; left: 0; top: 0; width: 830px; height: 117px; display: none; flex-direction: column; justify-content: center; padding: 0 24px; background: #12361f; border-right: 4px solid #2ea043; }
+  #result.bad { background: #5a0f12; border-color: #ff4b4b; }
+  #result small { font-size: 16px; color: #b7f5c5; } #result.bad small { color: #ffc9c5; }
+  #rtext { font-size: 28px; font-weight: 800; line-height: 1.25; word-break: keep-all; }
+  #idle { position: absolute; left: 0; top: 0; width: 1920px; height: 117px; display: none; align-items: center; justify-content: center; font-size: 30px; color: #6e7681; background: #0b0f14; }
+
+  /* ── CARLA · 폰 자리 (OBS 에서 그 위에 올림) ── */
+  .slot { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #484f58; text-align: center; background: #05070a; }
+  #sCarla { left: 0; top: 120px; width: 1280px; height: 720px; font-size: 26px; }
+  #sPhone { left: 1300px; top: 170px; width: 400px; height: 880px; border-radius: 22px; border: 2px solid #21262d; font-size: 20px; padding: 0 20px; }
+  #sPhone.noapp { color: #ff7b72; border-color: #5a0f12; background: #160607; }
+  #sPhone b { font-size: 34px; display: block; margin-bottom: 14px; }
+  .slot small { font-size: 16px; margin-top: 10px; color: #30363d; }
+  #phoneLab { position: absolute; left: 1300px; top: 128px; width: 400px; text-align: center; font-size: 19px; color: #8b949e; }
+
+  /* ── 오른쪽: 경고 기록 ── */
+  #side { position: absolute; left: 1712px; top: 128px; width: 200px; height: 944px; display: flex; flex-direction: column; gap: 10px; }
+  .box { background: #11161d; border: 1px solid #21262d; border-radius: 10px; padding: 10px 12px; }
+  .box h3 { margin: 0 0 8px; font-size: 16px; color: #8b949e; font-weight: 600; }
+  #tl { flex: 1; min-height: 0; overflow: hidden; }
+  .ev { margin-bottom: 10px; }
+  .ev .t { font-family: ui-monospace, monospace; font-size: 15px; color: #8b949e; }
+  .ev .l { display: inline-block; font-size: 19px; font-weight: 800; padding: 1px 10px; border-radius: 6px; margin-top: 2px; }
+  .ev .l.caution { background: #ffb000; color: #1a1300; } .ev .l.warning { background: #f28c28; color: #1f0e00; } .ev .l.danger { background: #e02424; color: #fff; } .ev .l.clear { background: #21262d; color: #8b949e; }
+  .ev .w { font-size: 14px; color: #c9d1d9; margin-top: 2px; line-height: 1.3; }
+  .kv { display: flex; justify-content: space-between; font-size: 15px; color: #8b949e; margin-top: 4px; }
+  .kv b { color: #79c0ff; font-family: ui-monospace, monospace; font-size: 17px; }
+
+  /* ── 아래: 관제 ── */
+  #strip { position: absolute; left: 0; top: 840px; width: 1280px; height: 240px; display: grid; grid-template-columns: 372px 286px 372px 250px; background: #0b0f14; border-top: 3px solid #30363d; }
+  .pan { padding: 6px 8px 8px; border-right: 2px solid #21262d; display: flex; flex-direction: column; min-width: 0; }
+  .pan:last-child { border-right: 0; }
+  .pan h3 { margin: 0 0 4px; font-size: 15px; color: #8b949e; font-weight: 600; white-space: nowrap; display: flex; justify-content: space-between; }
+  .pan h3 b { color: #e6edf3; } .pan h3 span { color: #79c0ff; font-family: ui-monospace, monospace; }
+  .pan img, .pan canvas { flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #000; border-radius: 6px; display: block; }
+  .stat { display: grid; grid-template-columns: 1fr auto; row-gap: 5px; font-size: 15px; color: #8b949e; align-content: start; }
+  .stat b { color: #79c0ff; font-family: ui-monospace, monospace; font-size: 17px; text-align: right; }
+  .stat .hd { grid-column: span 2; color: #e6edf3; font-weight: 700; font-size: 15px; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="band">
+    <div class="cell"><div id="title">–</div><div id="sub"></div></div>
+    <div class="cell">
+      <div class="sig"><small>보행 신호</small><span class="lamp" id="lp"></span><span id="tp">–</span></div>
+      <div class="sig"><small>차량 신호</small><span class="lamp" id="lv"></span><span id="tv">–</span></div>
+    </div>
+    <div class="cell"><div class="veh"><div class="id">차량 A<br><span id="aNote"></span></div><div class="spd" id="aSpd">–<i>km/h</i></div>
+      <div class="chips"><div class="chip" id="aLv">–</div><div class="why" id="aWhy"></div></div><div class="brk" id="aBrk">브레이크</div></div></div>
+    <div class="cell"><div class="veh"><div class="id">차량 B</div><div class="spd" id="bSpd" style="font-size:46px;min-width:84px">–<i>km/h</i></div>
+      <div class="chips"><div class="chip" id="bLv" style="font-size:22px">–</div></div></div></div>
+    <div id="result"><small>결과</small><div id="rtext"></div></div>
+    <div id="idle">BlindGuard-X · 2초 전 횡단보도</div>
+  </div>
+
+  <div class="slot" id="sCarla">CARLA 화면 자리<small>OBS: CARLA 소스 · 위치 0, 120 · 크기 1280 × 720</small></div>
+  <div id="phoneLab">운전자 폰 화면 (차량 A · 실제 앱)</div>
+  <div class="slot" id="sPhone"><div id="phoneTxt">폰 화면 자리<small style="display:block">OBS: PHONE 소스 · 위치 1300, 170 · 크기 400 × 880</small></div></div>
+
+  <div id="side">
+    <div class="box" id="tl"><h3 id="tlH">차량 A 에 보낸 경고</h3><div id="evs"></div></div>
+    <div class="box"><h3>전달 지연 (중앙값)</h3>
+      <div class="kv">촬영→서버<b id="l1">–</b></div><div class="kv">서버→폰<b id="l3">–</b></div><div class="kv">합계<b id="l4">–</b></div></div>
+  </div>
+
+  <div id="strip">
+    <div class="pan"><h3><b>Cam1 · 횡단보도</b><span id="m1"></span></h3><img id="img1" alt=""></div>
+    <div class="pan"><h3><b>Cam2 · 대기구역</b><span id="m2"></span></h3><img id="img2" alt=""></div>
+    <div class="pan"><h3><b>위에서 본 위치</b><span id="m3"></span></h3><canvas id="map" width="712" height="400"></canvas></div>
+    <div class="pan"><h3><b>Raspberry Pi 5 처리</b><span id="mT"></span></h3>
+      <div class="stat">
+        <div class="hd">Cam1 · YOLO26n + ByteTrack</div><div>처리 속도</div><b id="c1f">–</b><div>프레임당</div><b id="c1m">–</b>
+        <div class="hd">Cam2 · MOG2 + LK + EMR</div><div>처리 속도</div><b id="c2f">–</b><div>EMR 점수</div><b id="c2e">–</b>
+      </div></div>
+  </div>
+</div>
+<script>
+const VER = "1124c";
+const $ = (id) => document.getElementById(id);
+const LV = {caution: "주의", warning: "경고", danger: "긴급 정지"};
+const WHY = {CPA: "CPA 충돌 예측", EMR: "Cam2 조기 징후", SIGNAL: "신호 전환"};
+const SIGP = {GREEN: ["g", "초록"], FLASH: ["f", "깜빡임"], RED: ["r", "빨강"]}, SIGV = {GREEN: ["g", "초록"], RED: ["r", "빨강"]};
+const f1 = (v, d = 1) => (v == null ? "–" : Number(v).toFixed(d));
+let CFG = null, simOff = null, takeMs = null;
+
+function fit() { const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080); const st = $("stage").style; st.transform = `scale(${s})`; st.left = (window.innerWidth - 1920 * s) / 2 + "px"; st.top = (window.innerHeight - 1080 * s) / 2 + "px"; }
+window.addEventListener("resize", fit); fit();
+let _lastPaint = Date.now(); (function _raf() { _lastPaint = Date.now(); requestAnimationFrame(_raf); })();   // 창이 최소화되면 멈춤 → 서버 점검이 알아챔
+
+function camLoop(cam, img) {
+  const loader = new Image(); let busy = false, since = 0;
+  loader.onload = () => { img.src = loader.src; busy = false; }; loader.onerror = () => { busy = false; };
+  setInterval(() => { if (busy && Date.now() - since > 2000) busy = false; if (!busy) { busy = true; since = Date.now(); loader.src = `/api/preview/${cam}?t=${Date.now()}`; } }, 150);
+}
+camLoop("cam1", $("img1")); camLoop("cam2", $("img2"));
+
+function spd(el, v) { el.firstChild.nodeValue = v == null ? "–" : Math.round(v); }
+function renderHud(h) {
+  const live = h.connected && (h.running || (h.result && h.result.age_s < 12));
+  $("idle").style.display = live ? "none" : "flex";
+  const noApp = !!(h.meta && h.meta.no_app) && (h.running || !!h.result);
+  $("sPhone").className = "slot" + (noApp ? " noapp" : "");
+  $("phoneTxt").innerHTML = noApp ? "<b>앱 없음</b>운전자에게 경고가 전달되지 않음" : "폰 화면 자리<small style=\"display:block\">OBS: PHONE 소스 · 위치 1300, 170 · 크기 400 × 880</small>";
+  $("tlH").textContent = noApp ? "시스템 판정 (폰 전달 안 됨)" : "차량 A 에 보낸 경고";
+  $("phoneLab").textContent = noApp ? "운전자 폰 화면 (차량 A · 앱 없음)" : "운전자 폰 화면 (차량 A · 실제 앱)";
+  if (h.running && h.t != null) simOff = h.now - h.t * 1000;
+  if (h.take_ms) takeMs = h.take_ms;
+  if (!live) { $("evs").innerHTML = `<div style="color:#484f58;font-size:15px">아직 없음</div>`; return; }   // 대기 중에는 지난 상황 기록을 비움
+  $("title").textContent = h.title || "–"; $("sub").textContent = (h.meta && h.meta.sub) || "";
+  const p = SIGP[h.signal.ped] || ["", "–"], v = SIGV[h.signal.veh] || ["", "–"];
+  $("lp").className = "lamp " + p[0]; $("tp").innerHTML = p[1] + (h.signal.ped === "RED" && h.signal.ped_red_s != null && h.running ? ` <span class="el">${h.signal.ped_red_s.toFixed(0)}초째</span>` : "");
+  $("lv").className = "lamp " + v[0]; $("tv").textContent = v[1];
+  const A = h.veh.A, B = h.veh.B;
+  spd($("aSpd"), A.present ? A.speed_kmh : null); spd($("bSpd"), B.present ? B.speed_kmh : null);
+  $("aNote").textContent = noApp ? "앱 없음" : "";
+  if (noApp) { $("aLv").className = "chip noapp"; $("aLv").textContent = A.level ? "경고 전달 안 됨" : "앱 없음"; $("aWhy").textContent = A.level ? `시스템 판정: ${LV[A.level]}` : ""; }
+  else { $("aLv").className = "chip " + (A.level || "none"); $("aLv").textContent = A.level ? LV[A.level] : "경고 없음"; $("aWhy").textContent = A.level ? (A.reasons || []).map((r) => WHY[r] || r).join(" + ") : ""; }
+  $("aBrk").style.display = A.braking && !h.collision ? "block" : "none";
+  $("bLv").className = "chip " + (B.level || "none"); $("bLv").textContent = B.present || h.result ? (B.level ? LV[B.level] : "경고 없음") : "–";
+  $("band").className = h.collision ? "collide" : "";
+  const r = h.result; $("result").style.display = r ? "flex" : "none";
+  if (r) { $("result").className = r.ok === false || h.collision ? "bad" : ""; $("rtext").textContent = r.text; }
+}
+
+function drawMap(st) {
+  const c = $("map"), g = c.getContext("2d"), W = c.width, H = c.height, f = CFG && CFG.floor;
+  g.fillStyle = "#0d1117"; g.fillRect(0, 0, W, H);
+  if (!f || !Array.isArray(f.lanes)) { g.fillStyle = "#484f58"; g.font = "22px sans-serif"; g.textAlign = "center"; g.fillText("CARLA 연결 대기", W / 2, H / 2); g.textAlign = "left"; return; }
+  const R = {x: [-24, 24], y: [f.road_far_y - 1.5, 5]};
+  const s = Math.min(W / (R.x[1] - R.x[0]), H / (R.y[1] - R.y[0])), ox = (W - s * (R.x[1] - R.x[0])) / 2, oy = (H - s * (R.y[1] - R.y[0])) / 2;
+  const X = (x) => ox + (x - R.x[0]) * s, Y = (y) => H - oy - (y - R.y[0]) * s;
+  g.fillStyle = "#1c2128"; g.fillRect(0, Y(f.curb_y), W, Y(f.road_far_y) - Y(f.curb_y));
+  for (let x = f.crosswalk_x[0]; x < f.crosswalk_x[1]; x += 0.6) { g.fillStyle = "#3a424d"; g.fillRect(X(x), Y(f.curb_y), Math.max(1, 0.35 * s), Y(f.road_far_y) - Y(f.curb_y)); }
+  g.setLineDash([10, 10]); g.strokeStyle = "#484f58"; g.lineWidth = 1;
+  for (const ln of f.lanes) { g.beginPath(); g.moveTo(0, Y(ln.y)); g.lineTo(W, Y(ln.y)); g.stroke(); }
+  g.setLineDash([]);
+  if (f.waiting_poly) { g.strokeStyle = "#a371f7"; g.lineWidth = 3; g.beginPath(); f.waiting_poly.forEach((p, i) => i ? g.lineTo(X(p[0]), Y(p[1])) : g.moveTo(X(p[0]), Y(p[1]))); g.closePath(); g.stroke(); }
+  g.font = "bold 17px sans-serif";
+  for (const o of (st.sim && st.sim.obstacles) || []) { g.fillStyle = "#6e7681"; g.fillRect(X(o.x - o.len / 2), Y(o.y + o.wid / 2), o.len * s, o.wid * s); g.fillStyle = "#e6edf3"; g.fillText("트럭", X(o.x - o.len / 2) + 4, Y(o.y) + 6); }
+  for (const p of (st.edge.peds || [])) {
+    if (p.x_m == null) continue;
+    const tgt = st.vehicles.some((v) => v.level && v.track_id === p.track_id);
+    g.fillStyle = tgt ? "#ff7b72" : "#3fb950"; g.beginPath(); g.arc(X(p.x_m), Y(p.y_m), 9, 0, 7); g.fill();
+    if (p.v_ok) { g.strokeStyle = g.fillStyle; g.lineWidth = 3; g.beginPath(); g.moveTo(X(p.x_m), Y(p.y_m)); g.lineTo(X(p.x_m + p.vx * 1.5), Y(p.y_m + p.vy * 1.5)); g.stroke(); }
+  }
+  for (const v of st.vehicles) {
+    if (!v.state) continue;
+    const col = {danger: "#ff4b4b", warning: "#f28c28", caution: "#ffb000"}[v.level] || "#58a6ff", vx = X(v.state.x), vy = Y(v.state.y);
+    g.strokeStyle = col; g.lineWidth = 3; g.beginPath(); g.moveTo(vx, vy); g.lineTo(X(v.state.x + v.state.vx * 3), Y(v.state.y + v.state.vy * 3)); g.stroke();
+    g.fillStyle = col; g.fillRect(vx - 20, vy - 12, 40, 24); g.fillStyle = "#0d1117"; g.fillText(v.id, vx - 6, vy + 6);
+  }
+}
+function renderMon(st) {
+  const e = st.edge, c2 = st.cam2, t = e.timing || {}, live = e.connected && e.age_ms != null && e.age_ms < 1500;
+  $("m1").textContent = live ? `보행자 ${(e.peds || []).length}명` : "";
+  $("m2").textContent = c2 ? (c2.warmup ? "배경 학습" : (c2.crossed ? "차도 진입" : (c2.emr_state ? "출발 징후" : (c2.present ? "사람 있음" : "비어 있음")))) : "";
+  $("m2").style.color = c2 && (c2.crossed || c2.emr_state) ? "#ff7b72" : "#79c0ff";
+  $("mT").textContent = e.temp_c != null ? f1(e.temp_c, 0) + "°C" : "";
+  $("c1f").textContent = live ? f1(e.fps) + " FPS" : "–"; $("c1m").textContent = live ? f1(t.total, 0) + " ms" : "–";
+  $("c2f").textContent = c2 ? f1(c2.fps) + " FPS" : "–"; $("c2e").textContent = c2 ? f1(c2.emr, 2) : "–";
+  $("c2e").style.color = c2 && c2.emr_state ? "#ff7b72" : "#79c0ff";
+  const L = st.lat_stats || {};
+  $("l1").textContent = L.cap_server != null ? L.cap_server + " ms" : "–"; $("l3").textContent = L.server_phone != null ? L.server_phone + " ms" : "–";
+  $("l4").textContent = L.cap_sent != null && L.server_phone != null ? (L.cap_sent + L.server_phone) + " ms" : "–";
+  $("m3").textContent = st.sim && st.sim.time_scale ? "" : "";
+  // 이번 상황에서 차량 A 에 보낸 경고
+  const rows = (st.sent_log || []).filter((x) => x.vehicle === "A" && takeMs != null && x.ms >= takeMs);
+  $("evs").innerHTML = rows.slice(-6).map((x) => `<div class="ev"><div class="t">${x.sim_t != null ? "+" + x.sim_t.toFixed(1) + "초" : ""}</div>
+    <div class="l ${x.level || "clear"}">${x.level ? LV[x.level] : "해제"}</div><div class="w">${(x.reasons || []).map((r) => WHY[r] || r).join(" + ")}${x.level && x.lat && x.lat.server_phone != null ? `<br>폰 도착 ${x.lat.server_phone} ms` : ""}</div></div>`).join("") || `<div style="color:#484f58;font-size:15px">아직 없음</div>`;
+  drawMap(st);
+}
+async function j(u) { return (await fetch(u)).json(); }
+async function loopHud() { try { renderHud(await j("/api/hud?page=studio&v=" + VER + "&paint=" + (Date.now() - _lastPaint))); } catch (e) { $("idle").style.display = "flex"; } setTimeout(loopHud, 100); }
+async function loopMon() {
+  try { const st = await j("/api/monitor?page=studio_data"); if (!CFG || (st.sim && st.sim.geom_rev !== CFG.geom_rev)) CFG = await j("/api/config"); renderMon(st); } catch (e) { /* 다음 번에 다시 */ }
+  setTimeout(loopMon, 200);
+}
+loopHud(); loopMon();
+</script>
+</body>
+</html>

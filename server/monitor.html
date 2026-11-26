@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlindGuard-X 중앙 관제</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0d1117; color: #e6edf3; font-family: system-ui, "Noto Sans KR", sans-serif; font-size: 13px; }
+  header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #161b22; border-bottom: 1px solid #30363d; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0 10px 0 0; letter-spacing: .5px; }
+  header h1 span { color: #58a6ff; }
+  .chip { padding: 3px 9px; border-radius: 10px; background: #21262d; border: 1px solid #30363d; white-space: nowrap; font-size: 12px; }
+  .ok { background: #12361f; border-color: #2ea043; color: #7ee787; }
+  .warn { background: #3d2c00; border-color: #bb8009; color: #f2cc60; }
+  .bad { background: #3d1214; border-color: #da3633; color: #ff7b72; }
+  #clock { margin-left: auto; font-family: ui-monospace, monospace; font-size: 15px; }
+  main { display: grid; grid-template-columns: 1fr 1fr 1.15fr; grid-template-rows: auto 1fr; gap: 10px; padding: 10px; height: calc(100% - 46px); }
+  .panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; min-height: 0; }
+  .panel h2 { font-size: 13px; margin: 0 0 6px; color: #8b949e; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .panel h2 b { color: #e6edf3; }
+  .cam { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 6px; object-fit: contain; }
+  .sub { font-family: ui-monospace, monospace; font-size: 12px; color: #8b949e; margin-top: 5px; line-height: 1.5; }
+  .sub b { color: #e6edf3; font-weight: 600; }
+  canvas { width: 100%; background: #0d1117; border-radius: 6px; display: block; }
+  .span2 { grid-column: span 2; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; color: #8b949e; font-weight: 500; border-bottom: 1px solid #30363d; padding: 4px 5px; position: sticky; top: 0; background: #161b22; }
+  td { padding: 4px 5px; border-bottom: 1px solid #21262d; vertical-align: top; }
+  .scroll { overflow: auto; flex: 1; min-height: 0; }
+  .lv { padding: 1px 6px; border-radius: 4px; font-weight: 700; }
+  .lv-caution { background: #3d2c00; color: #f2cc60; } .lv-warning { background: #5a1e02; color: #ffa657; }
+  .lv-danger { background: #da3633; color: #fff; } .lv-none { background: #21262d; color: #8b949e; }
+  .mono { font-family: ui-monospace, monospace; }
+  .payload { font-family: ui-monospace, monospace; font-size: 11px; color: #8b949e; white-space: pre-wrap; word-break: break-all; max-height: 0; overflow: hidden; transition: max-height .2s; }
+  tr.open .payload { max-height: 400px; }
+  tr.click { cursor: pointer; } tr.click:hover { background: #1c2128; }
+  .col3 { display: grid; grid-template-rows: auto auto auto 1fr; gap: 10px; min-height: 0; }
+  #mirror { border-radius: 10px; padding: 12px; text-align: center; background: #0d1117; border: 2px solid #30363d; transition: all .2s; }
+  #mirror .big { font-size: 30px; font-weight: 800; }
+  #mirror .dir { font-size: 15px; margin-top: 4px; }
+  #mirror.m-caution { border-color: #bb8009; background: #2b2000; } #mirror.m-warning { border-color: #f0883e; background: #3a1a05; }
+  #mirror.m-danger { border-color: #ff4b4b; background: #5c1013; animation: blink .5s infinite alternate; }
+  @keyframes blink { from { box-shadow: 0 0 0 0 #ff4b4b; } to { box-shadow: 0 0 25px 4px #ff4b4b; } }
+  .lat { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
+  .lat div { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px; text-align: center; }
+  .lat b { display: block; font-size: 18px; font-family: ui-monospace, monospace; color: #79c0ff; }
+  .lat small { color: #8b949e; font-size: 11px; }
+  .ev-risk { color: #ffa657; } .ev-clear { color: #7ee787; } .ev-cam2 { color: #d2a8ff; } .ev-conn { color: #8b949e; }
+  body.alarm header { background: #5c1013; transition: background .2s; }
+  .zbtn { background: #21262d; color: #e6edf3; border: 1px solid #30363d; border-radius: 5px; padding: 2px 8px; cursor: pointer; font-size: 11px; }
+  .zbtn.on { border-color: #58a6ff; color: #58a6ff; }
+  .sig { display: inline-flex; gap: 4px; align-items: center; }
+  .sig i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: #30363d; }
+  .sig i.g { background: #3fb950; } .sig i.r { background: #ff4b4b; } .sig i.f { background: #3fb950; animation: fl .5s infinite alternate; }
+  @keyframes fl { from { opacity: 1; } to { opacity: .15; } }
+  .rsn { display: inline-block; padding: 0 5px; border-radius: 4px; font-size: 11px; margin-right: 3px; border: 1px solid #30363d; }
+  .rsn-CPA { color: #ffa657; border-color: #f0883e; } .rsn-EMR { color: #d2a8ff; border-color: #a371f7; } .rsn-SIGNAL { color: #7ee787; border-color: #2ea043; }
+  .ev-sim { color: #79c0ff; }
+  #fuse td, #fuse th { font-size: 12px; }
+  .emr { height: 8px; background: #21262d; border-radius: 4px; margin-top: 4px; } .emr div { height: 8px; border-radius: 4px; background: #d29922; width: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>BlindGuard-X</span> 중앙 관제</h1>
+  <span class="chip" id="cEdge">Pi -</span>
+  <span class="chip" id="cCam1">Cam1 -</span>
+  <span class="chip" id="cCam2">Cam2 -</span>
+  <span class="chip" id="cPhone">폰 A -</span>
+  <span class="chip" id="cGps">GPS -</span>
+  <span class="chip" id="cTrial">시험 -</span>
+  <span class="chip" id="cSim" style="display:none">CARLA -</span>
+  <span class="chip" id="cSig" style="display:none"><span class="sig">보행 <i id="sigP"></i> 차량 <i id="sigV"></i></span> <span id="sigT"></span></span>
+  <span id="clock">--:--:--</span>
+</header>
+<main>
+  <div class="panel">
+    <h2><span>CAM 1 · 횡단보도 <b>(YOLO26n + ByteTrack + Homography)</b></span><span id="m1">-</span></h2>
+    <img class="cam" id="img1" alt="Cam1 영상 없음">
+    <div class="sub" id="s1">-</div>
+  </div>
+  <div class="panel">
+    <h2><span>CAM 2 · 대기구역 <b>(MOG2 + Sparse LK + EMR)</b></span><span id="m2">-</span></h2>
+    <img class="cam" id="img2" alt="Cam2 영상 없음">
+    <div class="emr"><div id="emrbar"></div></div>
+    <div class="sub" id="s2">-</div>
+  </div>
+  <div class="panel">
+    <h2><span>현장 지도 · 차량 GPS + 보행자 <b>(위에서 본 모습, m)</b></span>
+      <span><button class="zbtn on" data-z="near">횡단보도</button> <button class="zbtn" data-z="mid">30 m</button> <button class="zbtn" data-z="wide">60 m</button></span></h2>
+    <canvas id="map" width="900" height="520"></canvas>
+    <div class="sub" id="sg">-</div>
+  </div>
+
+  <div class="panel span2">
+    <h2><span>앱 전송 로그 <b>(서버 → 차량 앱, 행을 누르면 보낸 메시지 원문)</b></span><span class="mono" id="sentN"></span></h2>
+    <div class="scroll">
+      <table id="sent"></table>
+    </div>
+  </div>
+  <div class="col3">
+    <div id="mirror"><div class="mono" style="color:#8b949e;font-size:11px">운전자 앱 화면 (차량 A가 지금 보고 있는 것)</div>
+      <div class="big" id="mBig">감시 중</div><div class="dir" id="mDir">-</div><div class="dir" id="mWhy"></div></div>
+    <div class="panel" style="padding:8px" id="fusePanel">
+      <h2><span>차량별 CPA 위험 판정 <b>(+ Cam2 조기 징후 · 보행자 신호)</b></span><span class="mono" id="fuseN"></span></h2>
+      <table id="fuse"></table>
+      <div class="sub">3초 예측 · 안전반경 2 m · 등속 가정 — 경고: dCPA ≤ 2 m 이고 0 ≤ tCPA ≤ 3 s · 긴급: tCPA ≤ 1.5 s · 주의: Cam2 조기 징후(EMR) + 5초 안 도착 (보행자 신호 FLASH/RED 전환 중이면 경고)</div>
+    </div>
+    <div class="panel" style="padding:8px">
+      <h2><span>지연 <b>(중앙값, ms)</b></span><span class="mono" id="latN"></span></h2>
+      <div class="lat">
+        <div><b id="l1">-</b><small>촬영 → 서버</small></div>
+        <div><b id="l2">-</b><small>판정 → 전송</small></div>
+        <div><b id="l3">-</b><small>서버 → 폰 수신</small></div>
+        <div><b id="l4">-</b><small>촬영 → 폰 (합)</small></div>
+      </div>
+      <div class="sub" id="lLive">-</div>
+    </div>
+    <div class="panel">
+      <h2><span>사건 로그</span></h2>
+      <div class="scroll"><table id="ev"></table></div>
+    </div>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const LV = {caution: "주의", warning: "경고", danger: "긴급"};
+const SIDE = {front: "전방", right: "우측", back: "후방", left: "좌측"};
+const RS = {CPA: "CPA 충돌 예측", EMR: "Cam2 조기 징후", SIGNAL: "보행자 신호 FLASH/RED"};
+let CFG = null, ST = null, zoom = "near";
+const openRows = new Set();
+const f1 = (v, d = 1) => v == null ? "-" : Number(v).toFixed(d);
+const p2 = (n) => String(n).padStart(2, "0");
+const tm = (ms) => { const d = new Date(ms); return `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.${Math.floor(d.getMilliseconds() / 100)}`; };
+const lvTag = (l) => l ? `<span class="lv lv-${l}">${LV[l]}</span>` : `<span class="lv lv-none">해제</span>`;
+async function j(u) { const r = await fetch(u); return r.json(); }
+let _lastPaint = Date.now(); (function _raf() { _lastPaint = Date.now(); requestAnimationFrame(_raf); })();   // 창이 최소화되면 멈춤 → 서버 점검이 알아챔
+
+document.querySelectorAll(".zbtn").forEach(b => b.onclick = () => {
+  zoom = b.dataset.z; document.querySelectorAll(".zbtn").forEach(x => x.classList.toggle("on", x === b));
+});
+
+// ── 카메라: 이중 버퍼 (깜빡임 없이) ──
+function camLoop(cam, imgId) {
+  const img = $(imgId);
+  const loader = new Image();
+  let busy = false, since = 0;
+  loader.onload = () => { img.src = loader.src; busy = false; };
+  loader.onerror = () => { busy = false; };
+  setInterval(() => {
+    if (busy && Date.now() - since > 2000) busy = false;   // 응답 없이 걸린 요청은 2초 뒤 버리고 다시 (화면이 멈춰 보이던 문제)
+    if (!busy) { busy = true; since = Date.now(); loader.src = `/api/preview/${cam}?t=${Date.now()}`; }
+  }, 200);
+}
+camLoop("cam1", "img1"); camLoop("cam2", "img2");
+setInterval(() => { const d = new Date(); $("clock").textContent = `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`; }, 250);
+
+// ── 지도 ──
+function drawMap(st) {
+  const c = $("map"), g = c.getContext("2d"), W = c.width, H = c.height;
+  const fl = CFG.floor, SIM = Array.isArray(fl.lanes);
+  const R = SIM ? {near: {x: [-16, 16], y: [fl.road_far_y - 1.5, 5]}, mid: {x: [-45, 45], y: [fl.road_far_y - 4, 8]},
+                   wide: {x: [-90, 90], y: [fl.road_far_y - 12, 14]}}[zoom]
+                : {near: {x: [-12, 12], y: [-8, 5]}, mid: {x: [-35, 10], y: [-12, 10]}, wide: {x: [-60, 30], y: [-25, 20]}}[zoom];
+  const s = Math.min(W / (R.x[1] - R.x[0]), H / (R.y[1] - R.y[0]));
+  const ox = (W - s * (R.x[1] - R.x[0])) / 2, oy = (H - s * (R.y[1] - R.y[0])) / 2;
+  const X = (x) => ox + (x - R.x[0]) * s, Y = (y) => H - oy - (y - R.y[0]) * s;
+  g.fillStyle = "#0d1117"; g.fillRect(0, 0, W, H);
+  const f = CFG.floor;
+  g.fillStyle = "#1c2128"; g.fillRect(0, Y(f.curb_y), W, Y(f.road_far_y) - Y(f.curb_y));            // 차도
+  for (let x = f.crosswalk_x[0]; x < f.crosswalk_x[1]; x += 0.6) {                                    // 횡단보도 줄무늬
+    g.fillStyle = "#2d333b"; g.fillRect(X(x), Y(f.curb_y), Math.max(1, 0.35 * s), Y(f.road_far_y) - Y(f.curb_y));
+  }
+  g.strokeStyle = "#da3633"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, Y(f.curb_y)); g.lineTo(W, Y(f.curb_y)); g.stroke();
+  g.strokeStyle = "#da3633"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, Y(f.road_far_y)); g.lineTo(W, Y(f.road_far_y)); g.stroke();
+  if (SIM) {   // CARLA J189 에서 뽑은 차로 (중심선 + 진행 방향)
+    g.font = "11px sans-serif";
+    for (const ln of f.lanes) {
+      g.setLineDash([8, 8]); g.strokeStyle = "#484f58"; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(0, Y(ln.y)); g.lineTo(W, Y(ln.y)); g.stroke(); g.setLineDash([]);
+      g.fillStyle = "#6e7681";
+      for (let x = Math.ceil(R.x[0] / 8) * 8; x <= R.x[1]; x += 8) g.fillText(ln.dir > 0 ? "→" : "←", X(x), Y(ln.y) + 4);
+      g.fillText(ln.name || "", 6, Y(ln.y) - 3);
+    }
+    if (f.near_band_y) { g.fillStyle = "#a371f710"; g.fillRect(0, Y(f.near_band_y[1]), W, Y(f.near_band_y[0]) - Y(f.near_band_y[1])); }
+    if (f.waiting_poly) {
+      g.strokeStyle = "#a371f7"; g.lineWidth = 2; g.beginPath();
+      f.waiting_poly.forEach((p, i) => i ? g.lineTo(X(p[0]), Y(p[1])) : g.moveTo(X(p[0]), Y(p[1]))); g.closePath(); g.stroke();
+      g.fillStyle = "#d2a8ff"; g.fillText("Cam2 대기구역", X(f.waiting_poly[0][0]), Y(f.waiting_poly[0][1]) - 14);
+    }
+    for (const o of (st.sim && st.sim.obstacles) || []) {   // 정차 차량 (운전자 시야 가림)
+      g.fillStyle = "#484f58"; g.fillRect(X(o.x - o.len / 2), Y(o.y + o.wid / 2), o.len * s, o.wid * s);
+      g.fillStyle = "#c9d1d9"; g.fillText(o.label || "정차 차량", X(o.x - o.len / 2) + 3, Y(o.y) + 4);
+    }
+  } else {
+    g.setLineDash([8, 8]); g.strokeStyle = "#6e7681"; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(0, Y(f.lane_y)); g.lineTo(W, Y(f.lane_y)); g.stroke(); g.setLineDash([]);
+  }
+  if (f.stop_x != null) { g.strokeStyle = "#f2cc60"; g.lineWidth = 2; g.beginPath(); g.moveTo(X(f.stop_x), Y(f.curb_y)); g.lineTo(X(f.stop_x), Y(f.road_far_y)); g.stroke(); }
+  g.font = "11px sans-serif"; g.fillStyle = "#6e7681";
+  const step = zoom === "near" ? 2 : (zoom === "mid" ? 5 : 10);
+  for (let x = Math.ceil(R.x[0] / step) * step; x <= R.x[1]; x += step) g.fillText(x, X(x) + 2, H - 4);
+  g.fillText("인도", 6, Y(f.curb_y) - 8); if (!SIM) g.fillText("차도 (차로선 y=" + f.lane_y + ")", 6, Y(f.lane_y) - 4);
+  // GPS 원본 흔적 → 추정 위치
+  for (const a of st.apps) {
+    const tr = a.trail || [];
+    tr.forEach((p, i) => {
+      if (p.raw[0] == null) return;
+      g.fillStyle = `rgba(139,148,158,${0.15 + 0.6 * i / tr.length})`; g.beginPath(); g.arc(X(p.raw[0]), Y(p.raw[1]), 3, 0, 7); g.fill();
+    });
+    g.strokeStyle = "#58a6ff55"; g.lineWidth = 2; g.beginPath(); let first = true;
+    for (const p of tr) { if (p.est[0] == null) continue; first ? g.moveTo(X(p.est[0]), Y(p.est[1])) : g.lineTo(X(p.est[0]), Y(p.est[1])); first = false; }
+    g.stroke();
+  }
+  // 보행자
+  const pedById = {};
+  for (const p of st.edge.peds || []) {
+    if (p.x_m == null) continue;
+    pedById[p.track_id] = p;
+    const self = st.vehicles.some(v => v.self_track === p.track_id);
+    const tgt = st.vehicles.some(v => v.level && v.track_id === p.track_id);
+    g.fillStyle = self ? "#6e7681" : (tgt ? "#ff7b72" : "#3fb950");
+    g.beginPath(); g.arc(X(p.x_m), Y(p.y_m), 7, 0, 7); g.fill();
+    if (p.v_ok) { g.strokeStyle = g.fillStyle; g.lineWidth = 2; g.beginPath(); g.moveTo(X(p.x_m), Y(p.y_m)); g.lineTo(X(p.x_m + p.vx), Y(p.y_m + p.vy)); g.stroke(); }
+    g.fillStyle = "#e6edf3"; g.fillText(`#${p.track_id}${self ? " (차량 본인)" : ""} ${Math.hypot(p.vx, p.vy).toFixed(1)}m/s`, X(p.x_m) + 9, Y(p.y_m) - 8);
+  }
+  // 차량
+  for (const v of st.vehicles) {
+    if (!v.state) continue;
+    const col = {danger: "#ff4b4b", warning: "#f0883e", caution: "#d29922"}[v.level] || "#58a6ff";
+    const vx = X(v.state.x), vy = Y(v.state.y);
+    if (v.state.acc) { g.strokeStyle = "#58a6ff33"; g.lineWidth = 1; g.beginPath(); g.arc(vx, vy, v.state.acc * s, 0, 7); g.stroke(); }
+    g.strokeStyle = col; g.setLineDash([3, 3]); g.beginPath(); g.arc(vx, vy, CFG.risk.safe_radius_m * s, 0, 7); g.stroke(); g.setLineDash([]);
+    g.lineWidth = 3; g.beginPath(); g.moveTo(vx, vy); g.lineTo(X(v.state.x + v.state.vx * 3), Y(v.state.y + v.state.vy * 3)); g.stroke();   // 3초 예측
+    const tp = v.track_id != null ? pedById[v.track_id] : null;
+    if (v.level && tp) { g.strokeStyle = col; g.lineWidth = 2; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(vx, vy); g.lineTo(X(tp.x_m), Y(tp.y_m)); g.stroke(); g.setLineDash([]); }
+    g.fillStyle = col; g.fillRect(vx - 15, vy - 9, 30, 18);
+    g.fillStyle = "#0d1117"; g.font = "bold 12px sans-serif"; g.fillText(v.id, vx - 4, vy + 4); g.font = "11px sans-serif";
+    g.fillStyle = "#e6edf3"; g.fillText(`${f1(v.speed_kmh != null ? v.speed_kmh : Math.hypot(v.state.vx, v.state.vy) * 3.6, 0)}km/h${v.braking ? " 감속" : ""}${SIM ? "" : " " + (v.state.vsrc || "")}`, vx + 18, vy + 4);
+  }
+}
+
+function render(st) {
+  const e = st.edge, now = st.now;
+  const live = e.connected && e.age_ms != null && e.age_ms < 1500;
+  $("cEdge").textContent = live ? "Pi 연결" : (e.connected ? "Pi 연결(영상 없음)" : "Pi 없음");
+  $("cEdge").className = "chip " + (live ? "ok" : "bad");
+  $("cCam1").textContent = `Cam1 ${(e.mode || "-").toUpperCase()} ${f1(e.fps)} FPS · ${f1(e.temp_c, 0)}°C`;
+  $("cCam1").className = "chip " + (live ? (e.temp_c > 78 ? "warn" : "ok") : "");
+  const c2 = st.cam2;
+  $("cCam2").textContent = c2 ? `Cam2 ${f1(c2.fps)} FPS` : "Cam2 -";
+  $("cCam2").className = "chip " + (c2 ? (c2.warmup ? "warn" : "ok") : "");
+  const A = st.apps.find(a => a.vehicle === "A");
+  $("cPhone").textContent = A ? `폰 A ${A.driving ? "주행 중" : "주행 전"}` : "폰 A 없음";
+  $("cPhone").className = "chip " + (A ? (A.driving ? "ok" : "warn") : "bad");
+  $("cGps").textContent = A && A.fix ? `GPS ±${f1(A.fix.acc, 0)}m · ${f1(A.fix.age_s)}s 전${st.anchor ? "" : " · 기준점 없음"}` : "GPS 없음";
+  $("cGps").className = "chip " + (A && A.fix && A.fix.age_s < 3 ? (st.anchor ? (A.fix.acc <= 10 ? "ok" : "warn") : "warn") : "bad");
+  $("cTrial").textContent = st.trial ? `${st.trial.id} ${st.trial.exp} ${st.trial.scenario || st.trial.label || ""} · ${f1(st.trial.t)}s` : "시험 없음";
+  $("cTrial").className = "chip " + (st.trial ? "ok" : "");
+  const sim = st.sim || {}, isSim = st.source === "carla";
+  $("cSim").style.display = $("cSig").style.display = isSim ? "" : "none";
+  if (isSim) {
+    $("cSim").textContent = `CARLA ${sim.connected ? "연결" : "끊김"} · take ${sim.take ?? "-"} · ${f1(sim.t)}s ${sim.phase || ""}${sim.time_scale ? " · ×" + f1(sim.time_scale, 2) : ""}`;
+    $("cSim").className = "chip " + (sim.connected ? "ok" : "bad");
+    const sg = sim.signal || {};
+    $("sigP").className = {GREEN: "g", FLASH: "f", RED: "r"}[sg.ped] || "";
+    $("sigV").className = {GREEN: "g", RED: "r", YELLOW: "f"}[sg.veh] || "";
+    $("sigT").textContent = sg.ped === "FLASH" ? "보행 깜빡임" : (sg.ped === "RED" && sg.ped_red_since_ms ? `보행 빨강 ${f1((st.now - sg.ped_red_since_ms) / 1000)}s` : (sg.ped === "GREEN" ? "보행 초록" : ""));
+    $("cSig").className = "chip " + (sg.ped === "FLASH" ? "warn" : (sg.ped === "RED" ? "bad" : "ok"));
+    $("cGps").textContent = "차량 위치: CARLA GNSS + 가상 OBU";
+    $("cGps").className = "chip ok";
+  }
+
+  // Cam1
+  const t = e.timing || {};
+  $("m1").textContent = live ? `${f1(e.fps)} FPS` : "";
+  $("s1").innerHTML = `단계 ms · Flow <b>${f1(t.flow)}</b> ROI <b>${f1(t.roi)}</b> Pack <b>${f1(t.pack)}</b> YOLO <b>${f1(t.infer)}</b> LK <b>${f1(t.lk)}</b> Track <b>${f1(t.track)}</b> Homo <b>${f1(t.homo)}</b> = <b>${f1(t.total)}</b><br>` +
+    `YOLO 실행률 <b>${e.yolo_rate ?? "-"}%</b> (${e.policy === "event" ? "필요할 때만" : "매 프레임"}) · ROI ${e.n_rois ?? "-"}개 · Packing ×${e.pack_scale ?? "-"} · 보행자 <b>${(e.peds || []).length}</b>명 · 촬영→서버 <b>${e.pipe_ms ?? "-"}</b> ms`;
+  // Cam2
+  if (c2) {
+    $("m2").textContent = c2.warmup ? "배경 학습 중" : (c2.crossed ? "경계 넘음" : (c2.emr_state ? "출발 예측" : (c2.present ? "사람 있음" : "비어 있음")));
+    $("emrbar").style.width = (100 * (c2.emr || 0)) + "%";
+    $("emrbar").style.background = c2.emr_state ? "#da3633" : "#d29922";
+    $("s2").innerHTML = `EMR <b>${f1(c2.emr, 2)}</b> · 경계까지 <b>${c2.signed_px ?? "-"}</b> px · 차도 방향 <b>${f1(c2.toward_px)}</b> px/f · 분석 <b>${f1(c2.timing && c2.timing.total)}</b> ms`;
+  }
+  // GPS
+  const g = (st.gps_raw || []).find(x => x.vehicle === "A");
+  const vA = st.vehicles.find(v => v.id === "A");
+  if (st.source === "carla") {   // 시뮬: 차량 위치 = CARLA GNSS + 가상 OBU (폰 GPS 안내는 공원 실물 테스트용)
+    const vB = st.vehicles.find(v => v.id === "B");
+    const line = v => v && v.state ? `차량 ${v.id} <b>${f1(v.speed_kmh != null ? v.speed_kmh : Math.hypot(v.state.vx, v.state.vy) * 3.6, 0)} km/h</b> · x ${f1(v.state.x)} m, y ${f1(v.state.y)} m · tCPA ${f1(v.tcpa, 2)} s · dCPA ${f1(v.dcpa, 2)} m` : "";
+    $("sg").innerHTML = "차량 위치: CARLA GNSS + 가상 OBU" + (vA && vA.state ? "<br>" + line(vA) : "") + (vB && vB.state ? "<br>" + line(vB) : "");
+  } else
+  $("sg").innerHTML = (g ? `폰 A GPS <b>${g.lat.toFixed(6)}, ${g.lng.toFixed(6)}</b> ±${f1(g.acc, 0)}m · 속력 <b>${f1(g.speed)}</b> m/s · 방향 ${g.heading != null && g.heading >= 0 ? f1(g.heading, 0) + "°" : "-"} · ${f1(g.age_s)}s 전` : "폰 A GPS 없음") +
+    (vA && vA.state ? `<br>바닥 좌표 추정 <b>x ${f1(vA.state.x)}, y ${f1(vA.state.y)}</b> · ${vA.state.vsrc || ""} · 판정 <b>${vA.status || "-"}</b> · tCPA ${f1(vA.tcpa, 2)} s · dCPA ${f1(vA.dcpa, 2)} m` +
+      (vA.self_track != null ? ` · 카메라 속 차량 본인 #${vA.self_track} (GPS 차이 ${f1(vA.self_dist)} m)` : "") : (st.anchor ? "" : "<br>GPS 기준점이 없어 바닥 좌표로 못 바꿈 → 조작 페이지 ③탭"));
+  drawMap(st);
+
+  // 운전자 앱 화면 미러
+  const lvA = vA ? vA.level : null;
+  const lastA = st.sent_log.slice().reverse().find(x => x.vehicle === "A");
+  const mir = $("mirror");
+  mir.className = lvA ? "m-" + lvA : "";
+  document.body.classList.toggle("alarm", lvA === "danger" || lvA === "warning");
+  $("mBig").textContent = lvA ? `${LV[lvA]} · 보행자` : (live ? "감시 중" : "연결 대기");
+  $("mDir").textContent = lvA && lastA && lastA.level ? (lastA.tcpa != null && (lastA.reasons || ["CPA"]).includes("CPA") ? `${SIDE[lastA.side] || "-"} · ${f1(lastA.dist)} m · 충돌까지 ${f1(lastA.tcpa)} s` : `${SIDE[lastA.side] || "-"} · 대기구역 보행자 출발 예측 · 횡단보도까지 ${f1(lastA.eta)} s`) : "";
+  $("mWhy").innerHTML = lvA && lastA && lastA.reasons ? lastA.reasons.map(r => `<span class="rsn rsn-${r}">${RS[r] || r}</span>`).join("") : "";
+  // 융합 판정 표 (차량별 지금 상태)
+  $("fusePanel").style.display = isSim ? "" : "none";
+  if (isSim) {
+    $("fuse").innerHTML = "<tr><th>차량</th><th>단계</th><th>근거</th><th>CPA</th><th>tCPA</th><th>dCPA</th><th>도착</th><th>EMR</th></tr>" +
+      st.vehicles.map(v => `<tr><td><b>${v.id}</b>${v.braking ? " 감속" : ""}</td><td>${lvTag(v.level)}</td>
+        <td>${(v.reasons || []).map(r => `<span class="rsn rsn-${r}">${RS[r] || r}</span>`).join("") || "-"}</td>
+        <td class="mono">${v.cpa_status || "-"}</td><td class="mono">${f1(v.tcpa, 2)}</td><td class="mono">${f1(v.dcpa, 2)}</td>
+        <td class="mono">${v.eta_s != null ? f1(v.eta_s) + "s" : "멀어짐"}${v.in_band ? "" : " (먼 차로)"}</td><td class="mono">${c2 ? f1(c2.emr, 2) : "-"}</td></tr>`).join("");
+    $("fuseN").textContent = `EMR ${c2 && c2.emr_state ? "출발 예측" : "-"}`;
+  }
+
+  // 지연
+  const L = st.lat_stats;
+  $("l1").textContent = L.cap_server ?? "-"; $("l2").textContent = L.judge_sent ?? "-"; $("l3").textContent = L.server_phone ?? "-";
+  $("l4").textContent = (L.cap_sent != null && L.server_phone != null) ? (L.cap_sent + L.server_phone) : "-";
+  $("latN").textContent = `경고 ${L.n}건`;
+  $("lLive").innerHTML = `지금 프레임 촬영→서버 <b>${L.live_cap_server ?? "-"}</b> ms · Pi 시계차 ${e.offset_ms ?? "-"} ms`;
+
+  // 앱 전송 로그
+  $("sentN").textContent = `${st.sent_log.length}건`;
+  $("sent").innerHTML = "<tr><th>시각</th><th>차량</th><th>단계</th><th>근거</th><th>방향</th><th>대상</th><th>거리</th><th>tCPA</th><th>dCPA</th><th>차량 위치·속력</th><th>촬영→서버</th><th>판정→전송</th><th>서버→폰</th><th>앱</th></tr>" +
+    st.sent_log.slice().reverse().map(x => `<tr class="click ${openRows.has(x.seq) ? "open" : ""}" onclick="toggleRow(${x.seq})">
+      <td class="mono">${tm(x.ms)}</td><td><b>${x.vehicle}</b></td><td>${lvTag(x.level)}</td><td>${(x.reasons || []).map(r => `<span class="rsn rsn-${r}">${RS[r] || r}</span>`).join("")}</td><td>${SIDE[x.side] || "-"}</td>
+      <td>${x.track_id != null ? "#" + x.track_id : "-"}</td><td class="mono">${f1(x.dist)}</td><td class="mono">${f1(x.tcpa, 2)}</td><td class="mono">${f1(x.dcpa, 2)}</td>
+      <td class="mono">${x.veh ? `(${f1(x.veh.x)}, ${f1(x.veh.y)}) ${f1(x.veh.v)}m/s` : "-"}</td>
+      <td class="mono">${x.lat.cap_server ?? "-"}</td><td class="mono">${x.lat.judge_sent ?? "-"}</td><td class="mono">${x.lat.server_phone ?? "…"}</td><td>${x.n_apps}대</td></tr>
+      <tr class="${openRows.has(x.seq) ? "open" : ""}"><td colspan="14" style="padding:0 5px;border:0"><div class="payload">${JSON.stringify(x.payload, null, 1)}</div></td></tr>`).join("");
+  // 사건 로그
+  $("ev").innerHTML = st.events.slice().reverse().map(x => `<tr><td class="mono" style="white-space:nowrap">${tm(x.ms)}</td><td class="ev-${x.kind}">${x.text}</td></tr>`).join("");
+}
+function toggleRow(seq) { openRows.has(seq) ? openRows.delete(seq) : openRows.add(seq); if (ST) render(ST); }
+
+async function poll() {
+  try {
+    ST = await j("/api/monitor?v=1124&paint=" + (Date.now() - _lastPaint));
+    if (ST.sim && ST.sim.geom_rev !== CFG.geom_rev) CFG = await j("/api/config");
+    render(ST);
+  }
+  catch (err) { $("cEdge").textContent = "서버 응답 없음"; $("cEdge").className = "chip bad"; console.log(err); }
+  setTimeout(poll, 250);
+}
+(async () => { CFG = await j("/api/config"); poll(); })();
+</script>
+</body>
+</html>
