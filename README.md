@@ -25,12 +25,6 @@ Drivers cannot react to a pedestrian they cannot see. BlindGuard-X watches the c
 
 > Concept (poster figure 1; labels in Korean). ① A parked vehicle hides the pedestrian from the driver. ② A roadside camera keeps watching the crosswalk and the waiting zone. ③ When a risk is detected, only the approaching vehicle on that side is alerted.
 
-## News
-
-- (2026.11.26) Evaluation on MOT15 and SOMPT22 added — see [docs/evaluation.md](docs/evaluation.md).
-- (2026.11.24) Seven CARLA scenarios recorded with a real Raspberry Pi 5 and phone app in the loop.
-- (2026.11) Code released. Prior work on ROI packing is listed in [docs/related-work.md](docs/related-work.md); no novelty is claimed for packing itself.
-
 ## Pipeline
 
 <p align="center"><img src="assets/poster/fig2-architecture.png" width="900"/></p>
