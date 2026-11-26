@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="322" viewBox="0 0 1440 322" role="img" aria-labelledby="t d">
+<title id="t">Results on MOT15</title>
+<desc id="d">FULL: MOTA 52.4, IDF1 52.9, Recall 62.6, Precision 86.9, IDs 153, FPS 30.6. ADAPTIVE: 54.2, 55.4, 65.3, 86.3, 148, 25.3. OURS per-ROI inference: 53.1, 59.8, 72.9, 79.3, 137, 11.5. OURS_PACKED: 56.0, 59.5, 67.4, 86.4, 141, 25.2.</desc>
+<rect x="1" y="1" width="1438" height="320" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="2"/>
+<path d="M1 65H1439 M1 129H1439 M1 193H1439 M1 257H1439 M520 1V321 M673 1V321 M826 1V321 M979 1V321 M1132 1V321 M1285 1V321" stroke="#d0d7de" stroke-width="2" fill="none"/>
+<g font-family="Arial,Helvetica,sans-serif" fill="#24292f" font-size="23">
+<text x="24" y="41" font-weight="700">Input strategy</text>
+<text x="596" y="41" text-anchor="middle" font-weight="700">MOTA</text>
+<text x="750" y="41" text-anchor="middle" font-weight="700">IDF1</text>
+<text x="902" y="41" text-anchor="middle" font-weight="700">Recall</text>
+<text x="1056" y="41" text-anchor="middle" font-weight="700">Precision</text>
+<text x="1208" y="41" text-anchor="middle" font-weight="700">IDs</text>
+<text x="1362" y="41" text-anchor="middle" font-weight="700">FPS</text>
+<text x="24" y="105" font-weight="400">FULL</text>
+<text x="596" y="105" text-anchor="middle" font-weight="400" fill="#57606a">52.4</text>
+<text x="750" y="105" text-anchor="middle" font-weight="400" fill="#57606a">52.9</text>
+<text x="902" y="105" text-anchor="middle" font-weight="400" fill="#57606a">62.6</text>
+<text x="1056" y="105" text-anchor="middle" font-weight="700">86.9</text>
+<text x="1208" y="105" text-anchor="middle" font-weight="400" fill="#57606a">153</text>
+<text x="1362" y="105" text-anchor="middle" font-weight="700">30.6</text>
+<text x="24" y="169" font-weight="400">ADAPTIVE</text>
+<text x="596" y="169" text-anchor="middle" font-weight="400" fill="#57606a">54.2</text>
+<text x="750" y="169" text-anchor="middle" font-weight="400" fill="#57606a">55.4</text>
+<text x="902" y="169" text-anchor="middle" font-weight="400" fill="#57606a">65.3</text>
+<text x="1056" y="169" text-anchor="middle" font-weight="400" fill="#57606a">86.3</text>
+<text x="1208" y="169" text-anchor="middle" font-weight="400" fill="#57606a">148</text>
+<text x="1362" y="169" text-anchor="middle" font-weight="400" fill="#57606a">25.3</text>
+<text x="24" y="233" font-weight="400">OURS (per-ROI inference)</text>
+<text x="596" y="233" text-anchor="middle" font-weight="400" fill="#57606a">53.1</text>
+<text x="750" y="233" text-anchor="middle" font-weight="700">59.8</text>
+<text x="902" y="233" text-anchor="middle" font-weight="700">72.9</text>
+<text x="1056" y="233" text-anchor="middle" font-weight="400" fill="#57606a">79.3</text>
+<text x="1208" y="233" text-anchor="middle" font-weight="700">137</text>
+<text x="1362" y="233" text-anchor="middle" font-weight="400" fill="#57606a">11.5</text>
+<text x="24" y="297" font-weight="700">OURS_PACKED</text>
+<text x="596" y="297" text-anchor="middle" font-weight="700">56.0</text>
+<text x="750" y="297" text-anchor="middle" font-weight="400" fill="#57606a">59.5</text>
+<text x="902" y="297" text-anchor="middle" font-weight="400" fill="#57606a">67.4</text>
+<text x="1056" y="297" text-anchor="middle" font-weight="400" fill="#57606a">86.4</text>
+<text x="1208" y="297" text-anchor="middle" font-weight="400" fill="#57606a">141</text>
+<text x="1362" y="297" text-anchor="middle" font-weight="400" fill="#57606a">25.2</text>
+</g></svg>

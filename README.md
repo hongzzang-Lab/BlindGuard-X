@@ -10,9 +10,12 @@
 
 ## Demo Links
 
-| Full demo videos | Run it on a laptop | Evaluation | Related work |
-|:---:|:---:|:---:|:---:|
-| [7 scenarios (mp4)](#visualization-results-in-carla) | [5-minute quick start](#demo) | [MOT15 · SOMPT22](docs/evaluation.md) | [Prior ROI-packing work](docs/related-work.md) |
+<p align="center">
+  <a href="#visualization-results-in-carla"><b>Demo videos (7 scenarios)</b></a> &nbsp;·&nbsp;
+  <a href="#demo"><b>5-minute quick start</b></a> &nbsp;·&nbsp;
+  <a href="docs/evaluation.md"><b>Evaluation: MOT15 · SOMPT22</b></a> &nbsp;·&nbsp;
+  <a href="docs/related-work.md"><b>Related work</b></a>
+</p>
 
 ## Abstract
 
@@ -56,38 +59,40 @@ Same detector, tracker and settings; only the image region given to the detector
 
 ### Results on MOT15 (six static-camera sequences, 2,315 frames)
 
-| Input strategy | MOTA | IDF1 | Recall | Precision | IDs | FPS |
-|----------------|------|------|--------|-----------|-----|-----|
-| FULL | 52.4 | 52.9 | 62.6 | **86.9** | 153 | **30.6** |
-| ADAPTIVE | 54.2 | 55.4 | 65.3 | 86.3 | 148 | 25.3 |
-| OURS (per-ROI inference) | 53.1 | **59.8** | **72.9** | 79.3 | **137** | 11.5 |
-| OURS_PACKED | **56.0** | 59.5 | 67.4 | 86.4 | 141 | 25.2 |
+<p align="center"><img src="assets/table-mot15.svg" alt="MOT15 results. FULL: MOTA 52.4, IDF1 52.9, Recall 62.6, Precision 86.9, IDs 153, FPS 30.6. ADAPTIVE: 54.2, 55.4, 65.3, 86.3, 148, 25.3. OURS (per-ROI inference): 53.1, 59.8, 72.9, 79.3, 137, 11.5. OURS_PACKED: 56.0, 59.5, 67.4, 86.4, 141, 25.2." width="100%"/></p>
 
 ### Results on SOMPT22 (nine training sequences, first 10 s each, 2,700 frames)
 
-| Input strategy | MOTA | IDF1 | Recall | Precision | IDs | FPS |
-|----------------|------|------|--------|-----------|-----|-----|
-| FULL | 18.0 | 27.9 | 19.5 | **93.6** | 182 | **30.2** |
-| ADAPTIVE | 19.6 | 30.0 | 21.4 | 92.9 | **162** | 24.8 |
-| OURS (per-ROI inference) | **29.3** | **42.6** | **33.0** | 90.6 | 295 | 8.7 |
-| OURS_PACKED | 23.5 | 35.1 | 26.1 | 91.9 | 243 | 24.3 |
+<p align="center"><img src="assets/table-sompt22.svg" alt="SOMPT22 results. FULL: MOTA 18.0, IDF1 27.9, Recall 19.5, Precision 93.6, IDs 182, FPS 30.2. ADAPTIVE: 19.6, 30.0, 21.4, 92.9, 162, 24.8. OURS (per-ROI inference): 29.3, 42.6, 33.0, 90.6, 295, 8.7. OURS_PACKED: 23.5, 35.1, 26.1, 91.9, 243, 24.3." width="100%"/></p>
 
-Per-person ROI raised Recall and IDF1 over full-frame input on both datasets. Packing kept part of that gain at 2.2–2.8× the speed of per-ROI inference. **Full-frame input remained the fastest.** Per-sequence tables and ten limitations are in [docs/evaluation.md](docs/evaluation.md).
+Bold marks the best value in each column. Per-person ROI raised Recall and IDF1 over full-frame input on both datasets. Packing kept part of that gain at 2.2–2.8× the speed of per-ROI inference. **Full-frame input remained the fastest.** Per-sequence tables and ten limitations are in [docs/evaluation.md](docs/evaluation.md).
 
 ### Visualization results in CARLA
 
-Each clip shows the moment of decision. Click a title for the full video.
+Each clip shows the moment of decision (left, then right). Click a title for the full video.
 
-| | |
-|:---:|:---:|
-| <img src="assets/demo/case1_blind_spot.gif" width="400"/> | <img src="assets/demo/case1_no_app.gif" width="400"/> |
-| [**CASE 1 · Blind spot**](assets/videos/case1_blind_spot.mp4)<br>Caution → warning → danger; stops 2 m before the pedestrian | [**CASE 1 control · No app**](assets/videos/case1_no_app.mp4)<br>Same scene without the alert: collision |
-| <img src="assets/demo/case2_signal_change.gif" width="400"/> | <img src="assets/demo/case3_red_light.gif" width="400"/> |
-| [**CASE 2 · Signal change**](assets/videos/case2_signal_change.mp4)<br>Pedestrian runs just after red; warning, gradual stop | [**CASE 3 · Red-light runner**](assets/videos/case3_red_light.mp4)<br>Only the vehicle running the light is alerted |
-| <img src="assets/demo/case4_speeding.gif" width="400"/> | <img src="assets/demo/case5_selective.gif" width="400"/> |
-| [**CASE 4 · Speeding**](assets/videos/case4_speeding.mp4)<br>50 km/h approach; alerted earlier, stops in time | [**CASE 5 · Selective alert**](assets/videos/case5_selective.mp4)<br>Two vehicles in adjacent lanes; only the one still in conflict is alerted |
-| <img src="assets/demo/case0_wait_only.gif" width="400"/> | |
-| [**CASE 0 control · Loitering**](assets/videos/case0_wait_only.mp4)<br>Pedestrian only waits; no false alert | |
+<p align="center"><img src="assets/demo/case1_blind_spot.gif" width="400"/>&nbsp;&nbsp;<img src="assets/demo/case1_no_app.gif" width="400"/></p>
+<p align="center">
+  <a href="assets/videos/case1_blind_spot.mp4"><b>CASE 1 · Blind spot</b></a> — caution → warning → danger; stops 2 m before the pedestrian<br>
+  <a href="assets/videos/case1_no_app.mp4"><b>CASE 1 control · No app</b></a> — same scene without the alert: collision
+</p>
+
+<p align="center"><img src="assets/demo/case2_signal_change.gif" width="400"/>&nbsp;&nbsp;<img src="assets/demo/case3_red_light.gif" width="400"/></p>
+<p align="center">
+  <a href="assets/videos/case2_signal_change.mp4"><b>CASE 2 · Signal change</b></a> — pedestrian runs just after red; warning, gradual stop<br>
+  <a href="assets/videos/case3_red_light.mp4"><b>CASE 3 · Red-light runner</b></a> — only the vehicle running the light is alerted
+</p>
+
+<p align="center"><img src="assets/demo/case4_speeding.gif" width="400"/>&nbsp;&nbsp;<img src="assets/demo/case5_selective.gif" width="400"/></p>
+<p align="center">
+  <a href="assets/videos/case4_speeding.mp4"><b>CASE 4 · Speeding</b></a> — 50 km/h approach; alerted earlier, stops in time<br>
+  <a href="assets/videos/case5_selective.mp4"><b>CASE 5 · Selective alert</b></a> — two vehicles in adjacent lanes; only the one still in conflict is alerted
+</p>
+
+<p align="center"><img src="assets/demo/case0_wait_only.gif" width="400"/></p>
+<p align="center">
+  <a href="assets/videos/case0_wait_only.mp4"><b>CASE 0 control · Loitering</b></a> — pedestrian only waits; no false alert
+</p>
 
 In these recordings the camera frames are analysed on a real Raspberry Pi 5 and the alert is shown on a real phone. Vehicle position and speed, signals, and the scripted motion come from the simulator.
 
