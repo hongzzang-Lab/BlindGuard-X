@@ -53,11 +53,11 @@ Same detector, tracker and settings; only the image region given to the detector
 
 ### Results on MOT15 (six static-camera sequences, 2,315 frames)
 
-<p align="center"><img src="assets/table-mot15.svg" alt="MOT15 results. FULL: MOTA 52.4, IDF1 52.9, Recall 62.6, Precision 86.9, IDs 153, FPS 30.6. ADAPTIVE: 54.2, 55.4, 65.3, 86.3, 148, 25.3. OURS (per-ROI inference): 53.1, 59.8, 72.9, 79.3, 137, 11.5. OURS_PACKED: 56.0, 59.5, 67.4, 86.4, 141, 25.2." width="100%"/></p>
+<p align="center"><img src="assets/table-mot15.svg" alt="MOT15 results. FULL: MOTA 52.4, IDF1 52.9, Recall 62.6, Precision 86.9, IDs 153, FPS 30.6. ADAPTIVE: 54.2, 55.4, 65.3, 86.3, 148, 25.3. OURS (per-ROI inference): 53.1, 59.8, 72.9, 79.3, 137, 11.5. OURS_PACKED: 56.0, 59.5, 67.4, 86.4, 141, 25.2." width="660"/></p>
 
 ### Results on SOMPT22 (nine training sequences, first 10 s each, 2,700 frames)
 
-<p align="center"><img src="assets/table-sompt22.svg" alt="SOMPT22 results. FULL: MOTA 18.0, IDF1 27.9, Recall 19.5, Precision 93.6, IDs 182, FPS 30.2. ADAPTIVE: 19.6, 30.0, 21.4, 92.9, 162, 24.8. OURS (per-ROI inference): 29.3, 42.6, 33.0, 90.6, 295, 8.7. OURS_PACKED: 23.5, 35.1, 26.1, 91.9, 243, 24.3." width="100%"/></p>
+<p align="center"><img src="assets/table-sompt22.svg" alt="SOMPT22 results. FULL: MOTA 18.0, IDF1 27.9, Recall 19.5, Precision 93.6, IDs 182, FPS 30.2. ADAPTIVE: 19.6, 30.0, 21.4, 92.9, 162, 24.8. OURS (per-ROI inference): 29.3, 42.6, 33.0, 90.6, 295, 8.7. OURS_PACKED: 23.5, 35.1, 26.1, 91.9, 243, 24.3." width="660"/></p>
 
 Bold marks the best value in each column. Per-person ROI raised Recall and IDF1 over full-frame input on both datasets. Packing kept part of that gain at 2.2–2.8× the speed of per-ROI inference. **Full-frame input remained the fastest.** Per-sequence tables and ten limitations are in [docs/evaluation.md](docs/evaluation.md).
 
