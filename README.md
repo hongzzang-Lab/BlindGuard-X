@@ -59,7 +59,7 @@ Same detector, tracker and settings; only the image region given to the detector
 
 <p align="center"><img src="assets/table-sompt22.svg" alt="SOMPT22 results. FULL: MOTA 18.0, IDF1 27.9, Recall 19.5, Precision 93.6, IDs 182, FPS 30.2. ADAPTIVE: 19.6, 30.0, 21.4, 92.9, 162, 24.8. OURS (per-ROI inference): 29.3, 42.6, 33.0, 90.6, 295, 8.7. OURS_PACKED: 23.5, 35.1, 26.1, 91.9, 243, 24.3." width="660"/></p>
 
-Bold marks the best value in each column. Per-person ROI raised Recall and IDF1 over full-frame input on both datasets. Packing kept part of that gain at 2.2–2.8× the speed of per-ROI inference. **Full-frame input remained the fastest.** Per-sequence tables and ten limitations are in [docs/evaluation.md](docs/evaluation.md).
+Bold marks the best value in each column. Per-person ROI raised Recall and IDF1 over full-frame input on both datasets. Packing kept part of that gain at 2.2–2.8× the speed of per-ROI inference. **Full-frame input remained the fastest.** Per-sequence tables are in [docs/evaluation.md](docs/evaluation.md).
 
 ### Visualization results in CARLA
 
@@ -171,16 +171,6 @@ cd ~/realtest && bash bench/run_on_pi.sh --bench sompt22           # Pi: SOMPT22
 ```
 
 Datasets and model weights are not included. See [bench/README.md](bench/README.md) (Korean).
-
-## Limitations
-
-- **Not validated on public roads.** Simulation, a limited webcam test and public datasets only. This is a prototype, not a safety system.
-- **ROI Packing is not faster than plain full-frame detection** (about 25 vs 30 FPS). It trades speed for accuracy.
-- **Crowded scenes defeat packing**, and on one SOMPT22 sequence the ROI strategies were clearly worse than full-frame.
-- **A larger-input full-frame detector was not measured**, so whether packing is the cheaper route to a given accuracy is open.
-- **The Cam2 early cue worked in simulation but did not trigger in our real-camera test.** Its weights and threshold were set by hand.
-- **CPA assumes constant velocity**, and vehicle position depends on phone GPS (or simulated GNSS).
-- Night scenes were not detected reliably.
 
 ## Acknowledgement
 
