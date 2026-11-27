@@ -1,6 +1,6 @@
 # BlindGuard-X
 
-[![Edge: Raspberry Pi 5](https://img.shields.io/badge/Edge-Raspberry%20Pi%205-238636.svg)](docs/vision-method.md) [![Detector: YOLO26n NCNN 416](https://img.shields.io/badge/Detector-YOLO26n%20NCNN%20416-0969da.svg)](docs/vision-method.md) [![Evaluated: MOT15 · SOMPT22](https://img.shields.io/badge/Evaluated-MOT15%20%C2%B7%20SOMPT22-8250df.svg)](docs/evaluation.md) [![Road validation: not yet](https://img.shields.io/badge/Road%20validation-Not%20yet-6e7781.svg)](#limitations)
+[![Edge: Raspberry Pi 5](https://img.shields.io/badge/Edge-Raspberry%20Pi%205-238636.svg)](docs/vision-method.md) [![Detector: YOLO26n NCNN 416](https://img.shields.io/badge/Detector-YOLO26n%20NCNN%20416-0969da.svg)](docs/vision-method.md) [![Evaluated: MOT15 · SOMPT22](https://img.shields.io/badge/Evaluated-MOT15%20%C2%B7%20SOMPT22-8250df.svg)](docs/evaluation.md) [![Road validation: not yet](https://img.shields.io/badge/Road%20validation-Not%20yet-6e7781.svg)](docs/evaluation.md#limitations)
 
 #### Roadside edge AI that warns drivers about pedestrians they can't see.
 
